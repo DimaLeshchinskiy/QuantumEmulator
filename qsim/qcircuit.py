@@ -1,34 +1,41 @@
 from qsim.qconstants import *
+from qsim.qcolumn import QColumn
 import numpy as np
 
 
 class QCircuit():
     def __init__(self):
         self.state = 1
-        self.gates = 1
         self.qbits_size = 0
-    
-    def addQubit(self, initValue=0):
-        qbit = ZERO
-        if initValue == 1:
-            qbit = ONE
+        self.circuit = []
 
-        self.state = np.kron(self.state, qbit)
-        self.qbits_size += 1
-
-    def addQubits(self, count, initValue=0):
-        for i in range(count):
-            self.addQubit(initValue)
-        
-    def addH(self, index):
-        for i in range(self.qbits_size):
-            if index == i:
-                self.gates = np.kron(self.gates, H)
+    def addQubits(self, initValues=[]):
+        column = QColumn()
+        values = []
+        for value in initValues:
+            if value == 1:
+                values.append(ONE)
             else:
-                self.gates = np.kron(self.gates, I)
+                values.append(ZERO)
+        column.set(values)
+        self.circuit.append(column)
+        self.qbits_size = len(initValues)
+
+    def addGates(self, gates=[]):
+        column = QColumn()
+        column.set(gates)
+        self.circuit.append(column)
+
+    def simulate(self):
+        self.state = self.circuit[0].matrix
+
+        for i, column in enumerate(self.circuit):
+            if i == 0:
+                continue
+
+            self.state = np.matmul(self.state, column.matrix)
 
     def _getProbabiltyOfOne(self, index):
-        state = np.matmul(self.gates, self.state)
         vector = []
         index += 1
         for i in range(0, 2 ** self.qbits_size):
@@ -37,19 +44,19 @@ class QCircuit():
             else:
                 vector.append(0)
 
-        print(state)
-        print(np.array([vector], dtype=complex).conj())
+        # print(state)
+        # print(np.array([vector], dtype=complex).conj())
         
-        return np.matmul(np.array([vector], dtype=complex).conj(), state.transpose()) ** 2
+        return np.matmul(np.array([vector], dtype=complex).conj(), self.state.transpose()) ** 2
 
     def measure(self, index):
         probabilityOfOne = np.real(self._getProbabiltyOfOne(index).item(0))
-        print(probabilityOfOne)
-        return np.random.choice(a=[0, 1], size=1, p=[1 - probabilityOfOne, probabilityOfOne])
+        # print(probabilityOfOne)
+        return np.random.choice(a=[0, 1], size=1, p=[1 - probabilityOfOne, probabilityOfOne])[0]
     
     def measureAll(self):
         all = []
         for i in range(self.qbits_size):
-            all.append(self.measure(i)[0])
+            all.append(self.measure(i))
 
         return all            
