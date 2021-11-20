@@ -23,7 +23,7 @@ class QCircuit():
 
     def addGates(self, gates=[]):
         column = QColumn()
-        column.set(gates)
+        column.set(gates[::-1])
         self.circuit.append(column)
 
     def simulate(self):
@@ -43,15 +43,11 @@ class QCircuit():
                 vector.append(1)
             else:
                 vector.append(0)
-
-        # print(state)
-        # print(np.array([vector], dtype=complex).conj())
         
         return np.matmul(np.array([vector], dtype=complex).conj(), self.state.transpose()) ** 2
 
     def measure(self, index):
         probabilityOfOne = np.real(self._getProbabiltyOfOne(index).item(0))
-        # print(probabilityOfOne)
         return np.random.choice(a=[0, 1], size=1, p=[1 - probabilityOfOne, probabilityOfOne])[0]
     
     def measureAll(self):
