@@ -1,4 +1,4 @@
-from qsim.qconstants import *
+from qsim.qconstants import ONE, ZERO, X
 from qsim.qcolumn import QColumn
 import numpy as np
 
@@ -23,8 +23,16 @@ class QCircuit():
 
     def addGates(self, gates=[]):
         column = QColumn()
-        column.set(gates[::-1])
+        column.set(gates)
         self.circuit.append(column)
+    
+    def addControlGate(self, controlIndex, targetIndex, gate):
+        column = QColumn(self.qbits_size)
+        column.setControl(controlIndex, targetIndex, gate)
+        self.circuit.append(column)
+
+    def addCNOT(self, controlIndex, targetIndex):
+        self.addControlGate(controlIndex, targetIndex, X)
 
     def simulate(self):
         self.state = self.circuit[0].matrix
@@ -37,14 +45,13 @@ class QCircuit():
 
     def _getProbabiltyOfOne(self, index):
         vector = []
-        index += 1
         for i in range(0, 2 ** self.qbits_size):
-            if (i & index) > 0:
+            if (i & 2 ** (self.qbits_size - index - 1)) > 0:
                 vector.append(1)
             else:
                 vector.append(0)
-        
-        return np.matmul(np.array([vector], dtype=complex).conj(), self.state.transpose()) ** 2
+
+        return np.matmul(np.array(vector, dtype=complex).conj(), self.state.transpose()) ** 2
 
     def measure(self, index):
         probabilityOfOne = np.real(self._getProbabiltyOfOne(index).item(0))
