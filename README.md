@@ -43,3 +43,21 @@ circuit.simulate() # make calculations
 state = circuit.measureAll() # get state of all qubits
 print(state) # in this case output will be always [1, 0]
 ```
+
+#### Example 3
+This code describes scheme with 3 qubits. I apply CNOT gate for qubits that are not neigbours
+
+![Alt text](/images/cnot_scheme.bmp?raw=true "Example3 scheme")
+
+```python
+from qsim.qcircuit import QCircuit
+from qsim.qconstants import X, I
+circuit = QCircuit()
+
+circuit.addQubits([1, 0, 0]) # create 1 qubits with init value 1 and 2 qubits with init value 0
+circuit.addCNOT(controlIndex=0, targetIndex=2) # add CNOT gate with 0 index qubit as control and 2 index as target
+
+circuit.simulate() # make calculations
+state = circuit.measureAll() # get state of all qubits
+print(state) # in this case output will be always [1, 0, 1]
+```
