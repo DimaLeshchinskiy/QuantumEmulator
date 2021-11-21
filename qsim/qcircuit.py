@@ -43,23 +43,45 @@ class QCircuit():
 
             self.state = np.matmul(self.state, column.matrix)
 
-    def _getProbabiltyOfOne(self, index):
-        vector = []
-        for i in range(0, 2 ** self.qbits_size):
-            if (i & 2 ** (self.qbits_size - index - 1)) > 0:
-                vector.append(1)
-            else:
-                vector.append(0)
+    def _IntToBinArray(self, number, size=0):
+        bitArray = []
+        size -= 1
 
+        while size >= 0:
+            if 2 ** size > number:
+                bitArray.append(0)
+            else:
+                bitArray.append(1)
+                number -= 2 ** size
+
+            size -= 1
+
+        return bitArray
+
+    def _getProbabilty(self, vector):
         return np.matmul(np.array(vector, dtype=complex).conj(), self.state.transpose()) ** 2
 
-    def measure(self, index):
-        probabilityOfOne = np.real(self._getProbabiltyOfOne(index).item(0))
-        return np.random.choice(a=[0, 1], size=1, p=[1 - probabilityOfOne, probabilityOfOne])[0]
-    
-    def measureAll(self):
-        all = []
-        for i in range(self.qbits_size):
-            all.append(self.measure(i))
+    def _getCombinationsOfStates(self):
+        states = []
 
-        return all            
+        for i in range(2**self.qbits_size):
+            binArr = self._IntToBinArray(i, self.qbits_size)
+            states.append(binArr)
+
+        return states
+
+    def measureAll(self):
+        vectorsOfPosibleStates = self._getCombinationsOfStates()
+        probabilities = []
+
+        for combination in vectorsOfPosibleStates:
+            state = 1
+            for bit in combination:
+                qubit = ZERO
+                if bit == 1:
+                    qubit = ONE
+                state = np.kron(state, qubit)
+            probabilities.append(self._getProbabilty(state).real.flat[0])
+
+        resultIndex = np.random.choice(a=len(vectorsOfPosibleStates), size=1, p=probabilities)[0]
+        return vectorsOfPosibleStates[resultIndex]
