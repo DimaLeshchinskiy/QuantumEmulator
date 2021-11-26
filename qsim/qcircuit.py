@@ -1,4 +1,4 @@
-from qsim.qconstants import ONE, ZERO, X
+from qsim.qconstants import I, ONE, ZERO, X
 from qsim.qcolumn import QColumn
 import numpy as np
 
@@ -25,6 +25,11 @@ class QCircuit():
         column = QColumn()
         column.set(gates)
         self.circuit.append(column)
+
+    def addGate(self, gate, index):
+        gates = [I] * self.qbits_size
+        gates[index] = gate
+        self.addGates(gates)
     
     def addControlGate(self, controlIndex, targetIndex, gate):
         column = QColumn(self.qbits_size)
