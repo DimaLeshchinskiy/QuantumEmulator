@@ -14,9 +14,9 @@ from qsim.qconstants import H
 
 circuit = QCircuit()
 
-circuit.addQubits([0]) # create 1 qubit with init value 0
-circuit.addGates([H]) # add 1 column of gates
-circuit.addGates([H]) # add 2 column of gates
+circuit.addQubits(0) # create 1 qubit with init value 0
+circuit.addGates(H, 0) # add 1 column of gates
+circuit.addGates(H, 0) # add 2 column of gates
 
 circuit.simulate() # make calculations
 
@@ -32,11 +32,11 @@ This code describes scheme with 2 qubits. As empty gate i use I gate, which is c
 
 ```python
 from qsim.qcircuit import QCircuit
-from qsim.qconstants import X, I
+from qsim.qconstants import X
 circuit = QCircuit()
 
-circuit.addQubits([0, 0]) # create 2 qubits with init value 0
-circuit.addGates([I, X]) # add 1 column of gates
+circuit.addQubits(0, 0) # create 2 qubits with init value 0
+circuit.addGates(X, 1) # add 1 column of gates
 circuit.addGates([X, X]) # add 2 column of gates
 
 circuit.simulate() # make calculations
@@ -52,10 +52,9 @@ This code describes scheme with 3 qubits. I apply CNOT gate for qubits that are 
 
 ```python
 from qsim.qcircuit import QCircuit
-from qsim.qconstants import X, I
 circuit = QCircuit()
 
-circuit.addQubits([1, 0, 0]) # create 1 qubits with init value 1 and 2 qubits with init value 0
+circuit.addQubits(1, 0, 0) # create 1 qubits with init value 1 and 2 qubits with init value 0
 circuit.addCNOT(controlIndex=0, targetIndex=2) # add CNOT gate with 0 index qubit as control and 2 index as target
 
 circuit.simulate() # make calculations
@@ -71,14 +70,32 @@ This code describes Bell state. This state has 0.5 probabilty to be measured in 
 
 ```python
 from qsim.qcircuit import QCircuit
-from qsim.qconstants import X, I
+from qsim.qconstants import H
 circuit = QCircuit()
 
-circuit.addQubits([0, 0]) # create 2 qubits with init value 0
-circuit.addGates([H, I])  # add 1 column of gates
+circuit.addQubits(0, 0) # create 2 qubits with init value 0
+circuit.addGates(H, 0)  # add 1 column of gates
 circuit.addCNOT(controlIndex=0, targetIndex=1) # add CNOT gate with 0 index qubit as control and 1 index as target
 
 circuit.simulate() # make calculations
 state = circuit.measureAll() # get state of all qubits
 print(state) # in this case output will [0, 0] or [1, 1] with probability of 0.5
+```
+
+#### Example 5
+
+This code show how to create Toffoli gate. In this case Toffoli gate is using like AND gate in normal boolean logic. If fisrt two qubits are setted to 1 then output witch is setted to 0 will be inverted.
+
+![Alt text](/images/toffoli_scheme.bmp?raw=true "Example5 scheme")
+
+```python
+from qsim.qcircuit import QCircuit
+circuit = QCircuit()
+
+circuit.addQubits(1, 1, 1) # create 2 qubits with init value 0
+circuit.addToffoli([0, 1], 2) # add Toffole gate with 0, 1 qubits as control and 2 qubit as target
+
+circuit.simulate() # make calculations
+state = circuit.measureAll() # get state of all qubits
+print(state) # in this case output will be always [1, 1, 0]
 ```
