@@ -1,6 +1,7 @@
 from qsim.qconstants import I, ONE, ZERO, X
 from qsim.qcolumn import QColumn
 import numpy as np
+from qsim.util.int2bin import intToBinArray
 
 
 class QCircuit():
@@ -9,7 +10,7 @@ class QCircuit():
         self.qbits_size = 0
         self.circuit = []
 
-    def addQubits(self, initValues=[]):
+    def addQubits(self, *initValues):
         column = QColumn()
         values = []
         for value in initValues:
@@ -31,37 +32,23 @@ class QCircuit():
         gates[index] = gate
         self.addGates(gates)
     
-    def addControlGate(self, controlIndex, targetIndex, gate):
+    def addControlGate(self, controlIndexes, targetIndex, gate):
         column = QColumn(self.qbits_size)
-        column.setControl(controlIndex, targetIndex, gate)
+        column.setControl(controlIndexes, targetIndex, gate)
         self.circuit.append(column)
 
     def addCNOT(self, controlIndex, targetIndex):
-        self.addControlGate(controlIndex, targetIndex, X)
+        self.addControlGate([controlIndex], targetIndex, X)
+
+    def addToffoli(self, controlIndexes, targetIndex):
+        self.addControlGate(controlIndexes, targetIndex, X)
 
     def simulate(self):
         self.state = self.circuit[0].matrix
-
         for i, column in enumerate(self.circuit):
             if i == 0:
                 continue
-
             self.state = np.matmul(self.state, column.matrix)
-
-    def _IntToBinArray(self, number, size=0):
-        bitArray = []
-        size -= 1
-
-        while size >= 0:
-            if 2 ** size > number:
-                bitArray.append(0)
-            else:
-                bitArray.append(1)
-                number -= 2 ** size
-
-            size -= 1
-
-        return bitArray
 
     def _getProbabilty(self, vector):
         return np.matmul(np.array(vector, dtype=complex).conj(), self.state.transpose()) ** 2
@@ -70,7 +57,7 @@ class QCircuit():
         states = []
 
         for i in range(2**self.qbits_size):
-            binArr = self._IntToBinArray(i, self.qbits_size)
+            binArr = intToBinArray(i, self.qbits_size)
             states.append(binArr)
 
         return states
