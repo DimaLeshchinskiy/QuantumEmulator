@@ -34,11 +34,14 @@ class QCircuit():
     
     def addControlGate(self, controlIndexes, targetIndex, gate):
         column = QColumn(self.qbits_size)
-        column.setControl(controlIndexes, targetIndex, gate)
+        if isinstance(controlIndexes, list): 
+            column.setControl(controlIndexes, targetIndex, gate)
+        else:
+            column.setControl([controlIndexes], targetIndex, gate)
         self.circuit.append(column)
 
     def addCNOT(self, controlIndex, targetIndex):
-        self.addControlGate([controlIndex], targetIndex, X)
+        self.addControlGate(controlIndex, targetIndex, X)
 
     def addToffoli(self, controlIndexes, targetIndex):
         self.addControlGate(controlIndexes, targetIndex, X)
