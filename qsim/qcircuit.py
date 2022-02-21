@@ -45,6 +45,11 @@ class QCircuit():
 
     def addToffoli(self, controlIndexes, targetIndex):
         self.addControlGate(controlIndexes, targetIndex, X)
+    
+    def addCustomMatrix(self, matrix):
+        column = QColumn(self.qbits_size)
+        column.matrix = matrix
+        self.circuit.append(column)
 
     def simulate(self):
         self.state = self.circuit[0].matrix
