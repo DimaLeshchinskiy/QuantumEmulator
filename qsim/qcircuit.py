@@ -59,7 +59,7 @@ class QCircuit():
             self.state = np.matmul(self.state, column.matrix)
 
     def _getProbabilty(self, vector):
-        return np.matmul(np.array(vector, dtype=complex).conj(), self.state.transpose()) ** 2
+        return np.abs(np.matmul(np.array(vector, dtype=complex).conj(), self.state.transpose())) ** 2
 
     def _getCombinationsOfStates(self):
         states = []
