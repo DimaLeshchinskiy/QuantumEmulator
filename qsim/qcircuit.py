@@ -10,6 +10,8 @@ class QCircuit():
         self.qbits_size = 0
         self.circuit = []
 
+        self.all_combinations_cache = []
+
     def addQubits(self, *initValues):
         column = QColumn()
         values = []
@@ -62,6 +64,9 @@ class QCircuit():
         return np.abs(np.matmul(np.array(vector, dtype=complex).conj(), self.state.transpose())) ** 2
 
     def _getCombinationsOfStates(self):
+        if len(self.all_combinations_cache) > 0:
+            return self.all_combinations_cache
+
         states = []
 
         for i in range(2**self.qbits_size):
