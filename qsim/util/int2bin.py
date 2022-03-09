@@ -10,3 +10,12 @@ def intToBinArray(number, size=0):
             number -= 2 ** size
         size -= 1
     return bitArray
+
+def binToInt(bitAray):
+    num = 0
+
+    for i, bit in enumerate(reversed(bitAray)):
+        num += bit * (2 ** i)
+    
+    return num
+
