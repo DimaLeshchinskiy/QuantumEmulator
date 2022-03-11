@@ -1,7 +1,8 @@
+from turtle import st
 from qsim.qconstants import I, ONE, ZERO, X
 from qsim.qcolumn import QColumn
 import numpy as np
-from qsim.util.int2bin import intToBinArray
+from qsim.util.int2bin import binToInt, intToBinArray
 
 
 class QCircuit():
@@ -108,3 +109,24 @@ class QCircuit():
                 possible.append((combination, probability))
 
         return possible
+
+    def measurePossible(self, indexes=[]):
+        all_possible = self.measureAllPossible()
+        groups = dict()
+        
+        for possible in all_possible:
+            state, probability = possible
+
+            part_of_state = []
+            for index in indexes:
+                part_of_state.append(state[index])
+            
+            part_decimal = binToInt(part_of_state)
+
+            if part_decimal in groups:
+                prob = groups[part_decimal][1]
+                groups[part_decimal] = (part_of_state, probability + prob)
+            else:
+                groups[part_decimal] = (part_of_state, probability)
+
+        return list(groups.values())
