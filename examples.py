@@ -48,6 +48,7 @@ circuit.addCNOT(controlIndex=0, targetIndex=1) # add CNOT gate with 0 index qubi
 circuit.simulate() # make calculations
 state = circuit.measureAll() # get state of all qubits
 print(state) # in this case output will [0, 0] or [1, 1] with probability of 0.5
+print(circuit.measureAllPossible())
 
 
 #EXAMPLE 5
