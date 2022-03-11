@@ -5,9 +5,9 @@ from qsim.util.int2bin import intToBinArray
 
 
 class QCircuit():
-    def __init__(self):
+    def __init__(self, qubit_size=0):
         self.state = 1
-        self.qbits_size = 0
+        self.qbits_size = qubit_size
         self.circuit = []
 
         self.all_combinations_cache = []
@@ -90,3 +90,21 @@ class QCircuit():
 
         resultIndex = np.random.choice(a=len(vectorsOfPosibleStates), size=1, p=probabilities)[0]
         return vectorsOfPosibleStates[resultIndex]
+    
+    def measureAllPossible(self):
+        vectorsOfPosibleStates = self._getCombinationsOfStates()
+        possible = []
+
+        for combination in vectorsOfPosibleStates:
+            state = 1
+            for bit in combination:
+                qubit = ZERO
+                if bit == 1:
+                    qubit = ONE
+                state = np.kron(state, qubit)
+            
+            probability = self._getProbabilty(state).real.flat[0]
+            if probability > 0:
+                possible.append((combination, probability))
+
+        return possible
