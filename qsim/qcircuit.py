@@ -49,6 +49,11 @@ class QCircuit():
     def addToffoli(self, controlIndexes, targetIndex):
         self.addControlGate(controlIndexes, targetIndex, X)
     
+    def addSwap(self, index1, index2):
+        self.addCNOT(index1, index2)
+        self.addCNOT(index2, index1)
+        self.addCNOT(index1, index2)
+    
     def addCustomMatrix(self, matrix):
         column = QColumn(self.qbits_size)
         column.matrix = matrix
