@@ -81,7 +81,7 @@ class QCircuit():
 
         return states
 
-    def measureAll(self):
+    def measure(self):
         vectorsOfPosibleStates = self._getCombinationsOfStates()
         probabilities = []
 
@@ -97,7 +97,7 @@ class QCircuit():
         resultIndex = np.random.choice(a=len(vectorsOfPosibleStates), size=1, p=probabilities)[0]
         return vectorsOfPosibleStates[resultIndex]
     
-    def measureAllPossible(self):
+    def _measureAllPossible(self):
         vectorsOfPosibleStates = self._getCombinationsOfStates()
         possible = []
 
@@ -115,8 +115,11 @@ class QCircuit():
 
         return possible
 
-    def measurePossible(self, indexes=[]):
-        all_possible = self.measureAllPossible()
+    def measureAll(self, indexes=[]):
+        all_possible = self._measureAllPossible()
+        if len(indexes) == 0:
+            return all_possible
+
         groups = dict()
         
         for possible in all_possible:
