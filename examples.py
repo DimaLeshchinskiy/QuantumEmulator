@@ -10,7 +10,7 @@ circuit.addGate(H, 0) # add 2 column of gates
 
 circuit.simulate() # make calculations
 state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will be always 0
+print("#EXAMPLE 1", state) # in this case output will be always 0
 
 
 #EXAMPLE 2
@@ -23,7 +23,7 @@ circuit.addGates([X, X]) # add 2 column of gates
 
 circuit.simulate() # make calculations
 state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will be always [1, 0]
+print("#EXAMPLE 2", state) # in this case output will be always [1, 0]
 
 
 #EXAMPLE 3
@@ -34,7 +34,7 @@ circuit.addCNOT(controlIndex=0, targetIndex=2) # add CNOT gate with 0 index qubi
 
 circuit.simulate() # make calculations
 state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will be always [1, 0, 1]
+print("#EXAMPLE 3", state) # in this case output will be always [1, 0, 1]
 
 
 #EXAMPLE 4
@@ -47,8 +47,8 @@ circuit.addCNOT(controlIndex=0, targetIndex=1) # add CNOT gate with 0 index qubi
 
 circuit.simulate() # make calculations
 state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will [0, 0] or [1, 1] with probability of 0.5
-print(circuit.measureAllPossible())
+print("#EXAMPLE 4", circuit.measureAllPossible()) # get all posible states
+print("#EXAMPLE 4", state) # in this case output will [0, 0] or [1, 1] with probability of 0.5
 
 
 #EXAMPLE 5
@@ -59,4 +59,17 @@ circuit.addToffoli([0, 1], 2) # add Toffole gate with 0, 1 qubits as control and
 
 circuit.simulate() # make calculations
 state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will be always [1, 1, 0]
+print("#EXAMPLE 5", state) # in this case output will be always [1, 1, 0]
+
+
+#EXAMPLE 6
+from qsim.qconstants import H, I
+circuit = QCircuit()
+
+circuit.addQubits(0, 1, 0) # create 3 qubits with init values 0, 1, 0
+circuit.addGates([H, I, I])  # add 1 column of gates; create states |+10⟩
+circuit.addSwap(0, 2) # swap qubits
+
+circuit.simulate() # make calculations
+state = circuit.measureAllPossible() # get all posible states
+print("#EXAMPLE 6", state)
