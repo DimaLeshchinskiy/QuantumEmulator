@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass[11pt]{article}
 \usepackage[czech]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{xcolor}
@@ -7,8 +7,10 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{hyperref}
+\usepackage{graphicx}
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\graphicspath{ {./images/} }
 
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -472,10 +474,6 @@ Slozka util obsahuje napomocne funkce, ktere bud vyuzivam primo v hlavnich trida
 
 \newpage
 
-\section{Shoruv algortmus}
-TODO
-\newpage
-
 \section{Ukazky kodu}
 V tehle kapitole ukazu nazorne priklady vyuziti me knihovny.
 Vsechny tyhle ukazky jsou v souboru \textbf{example.py}.
@@ -560,14 +558,49 @@ print(state) # in this case output will be always [1, 1, 0]
 \newpage
 
 
+\section{Shoruv algortmus}
+\subsection{Uvod}
+Profesor matematiky, P. Shor, prisel na to, jak rozlozit cislo na soucin dvou prvocisel za logaritmicky cas.
+Avsak jeho algoritmus vyzaduje pouzit kvantove vypocty. Zjistil, ze pro rozlozeni cisla,
+je potreba najit periodu funkce $f(x) = a^r \bmod N$, kde $a, N, r \in \mathbb{N}$.
+Pro a plati $a < N$.
+Perioda $r$ je pak nejmensi mozne cislo, pro ktere plati:
+$$a^r \bmod N = 1$$
+\par Problem nalezeni periody, je velice znamy ve svete kvantovych algoritmu. Tento algoritmus popisu v dalsi sekci.
+\par Kdyz periodu najdem, zbyva jen dopocitat cinitele cisla $N$ zapomoci Euklidova algoritmu pro nalezeni nejvetsiho spolecneho delitele:
+$$p, q = gcd(a^\frac{r}{2} \pm 1, N)$$
+
+\subsection{Nalezeni periody funkce}
+Pro nalezeni periody se vyuziva Quantum Phase Estimation algorithm. Jeho schema:
+\begin{figure}[htbp]
+    \includegraphics[scale=.5]{High-level-diagram-of-Shors-algorithm-Upper-register-consists-of-2n-qubits-and-holds}
+    \centering
+\end{figure}
+\par Je potreba si vytvorit dva registry. Prvni registr pojmenuju jako kontrolni. Druhy jako cilovy.
+Na velikost kontrolniho registru zalezei, jak moc je velka uspesnost dostat spravny vysledek a take jak moc presne vypocty budou.
+Velikost ciloveho registru zvolime jako $n = log_2(N)$.
+Pak velikost $2n$ bude dostacujici pro kontrolni registr.
+\par Vsechny qubity z kontrolniho registru dame do stavu $0$. Vsechny qubity z ciloveho registru dame do stavu $0$ az na posledni qubit. Ten bude ve stavu 1.
+Takze po inicializaci bude stav kvanotveho pocitace:
+$$|\phi\rangle = |0\rangle^{\otimes 2n} |1\rangle$$ 
+\par Dalsim krokem je potreba dostat kontrolni registr do superpozice pomoci Hadamard hradel:
+$$|\phi_2\rangle = $$
+
+\subsection{Implementace}
+TODO
+
+\newpage
+
+
 \section{Zdroje}
 \color{blue}
 \fontsize{10pt}{0}
 \url{https://cs.wikipedia.org/wiki/RSA}
 \par\url{https://en.wikipedia.org/wiki/Shor%27s_algorithm}
-\par\url{https://cs.wikipedia.org/wiki/Kvantov%C3%BD_po%C4%8D%C3%ADta%C4%8D}
 \par\url{https://en.wikipedia.org/wiki/Quantum_logic_gate}
 \par\url{https://arxiv.org/pdf/quant-ph/9508027.pdf}
+\par\url{https://qiskit.org/}
+
 
 
 \end{document}
