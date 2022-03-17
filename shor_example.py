@@ -7,7 +7,7 @@ import random
 
 from numpy import log2, pi, zeros
 
-# euklide algo
+# euclide algo
 def gcd(m, n):
     if m < n: 
         (m, n) = (n, m)
@@ -33,9 +33,8 @@ def QFT_inverse(circuit, n):
         circuit.addGate(H, i - 1)
 
 def Uf(circuit, a, N):
-    n1 = 2 * ceil(log2(N)) # one register size
-    n2 = ceil(log2(N))
-    # n = circuit.qbits_size // 2 # register size
+    n1 = 2 * ceil(log2(N)) # first register size
+    n2 = ceil(log2(N)) # second register size
     matrix = zeros((2 ** circuit.qbits_size, 2 ** circuit.qbits_size)) # fill matrix with zeros
 
     for i in range(2 ** circuit.qbits_size):
@@ -59,15 +58,16 @@ def Uf(circuit, a, N):
     circuit.addCustomMatrix(matrix)
 
 def orderFinding(a, N):
-    n1 = 2 * ceil(log2(N)) # one register size
-    n2 = ceil(log2(N))
+    n1 = 2 * ceil(log2(N)) # first register size
+    n2 = ceil(log2(N)) # second register size
     circuit = QCircuit()
 
     # fill first(control) register of size n with state 0 (|000...000>)
     # fill second(target) register of size n with state 1 (|000...001>)
-    register = [0] * (n1 + n2)
-    register[-1] = 1
-    circuit.addQubits(*register)
+    # this array represents two registers
+    registers = [0] * (n1 + n2)
+    registers[-1] = 1
+    circuit.addQubits(*registers)
 
     # apply QFT to the control register
     # or apply H, which has same behavior as QFT applied to |0⟩ ^ n
@@ -76,10 +76,10 @@ def orderFinding(a, N):
     gatesI = [I] * n2
     circuit.addGates([*gatesH, *gatesI])
 
-    # # apply Uf
+    # apply Uf
     Uf(circuit, a, N)
 
-    # # apply QFT_inverse to the control register
+    # apply QFT_inverse to the control register
     QFT_inverse(circuit, n1)
 
     circuit.simulate()
@@ -112,7 +112,6 @@ def Factorization(N):
                 checked_a.append(a)
                 break
 
-        print("Random: ", a)
         K = gcd(a, N)
 
         # step 2, 3
