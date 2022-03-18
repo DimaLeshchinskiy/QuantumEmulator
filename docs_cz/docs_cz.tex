@@ -1,5 +1,6 @@
 \documentclass[11pt]{article}
 \usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{xcolor}
 \usepackage{listings}
@@ -8,10 +9,10 @@
 \usepackage{amssymb}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
 \graphicspath{ {./images/} }
-
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -39,8 +40,9 @@
 
 \lstset{style=mystyle}
 
-\title{Dlouhodoba maturitni prace \\
-\large Teoreticky rozebrat a popsat shorův kvantový algoritmus na lámání šifry RSA. Implementovat algoritmus v nějakém simulátoru a použít ho na prolomení RSA s malým modulusem}
+\title{Dlouhodobá maturitní práce \\
+\large Teoreticky rozebrat a popsat shorův kvantový algoritmus na lámání šifry RSA. 
+Implementovat algoritmus v nějakém simulátoru a použít ho na prolomení RSA s malým modulusem}
 
 \author{Dmitry Leshchinskiy}
 \date{\today}
@@ -52,78 +54,92 @@
 \tableofcontents
 \newpage
 
-\section{Uvod do RSA}
+\section{Úvod do RSA}
 \subsection{Co je to RSA?}
 
-RSA je asymetricka sifra s otevrenym klicem. Pro pouziti teto sifry je potreba si vypocitat otevreny klic, kterym se bude sifrovat zprava urcena pro vas, a privatni klic, kterym vy budete sifru desifrovat. K aktualnimu dni se tato sifra povazuje za bezpecnou.
+RSA je asymetrická šifra s otevřeným klíčem.
+Pro použiti teto šifry je potřeba si vypočítat otevřeny klíč, kterým se bude šifrovat zprava určena pro vás, a privátní klíč, kterým vy budete šifru dešifrovat.
+K aktuálnímu dni se tato šifra povazuje za bezpečnou.
 
 \subsection{Princip RSA}
-Kdyz budu chtit nekomu poslat zakodovanou zpravu pomoci RSA, potrebuju si od adresata dostat jeho verejny klic. Timto klicem si zkoduju zpravu a odeslu mu ji zpet. Prijemce az zpravu dostane, desifruje ji pomoci sveho privatniho klice.
-\par Bezpecnost RSA je postavena na predpokladu, ze je dost narocne faktorizovat cislo. Faktorizovat cislo znamena rozlozit jej na soucin prvocisel.
+Když budu chtít někomu poslat zakódovanou zprávu pomoci RSA, potřebuji si od adresáta dostat jeho veřejný klíč.
+Tímto klíčem si zakóduji zprávu a odešlu.
+Příjemce až zprávu dostane, dešifruje ji pomoci svého privátního klíče.
+\par Bezpečnost RSA je postavena na předpokladu, že je dost náročné faktorizovat číslo.
+Faktorizovat číslo znamená rozložit jej na součin prvočísel.
 
-\subsection{Vypocet klicu teorie}
-Nejdriv si osoba musi vybrat dve prvocisla $p, q$.
-Nasledne se vypocita jejich nasobek. Oznacime ho za $N$.
-Dale si nadefinujem $\phi (N)$ jako $(p - 1) * (q - 1)$.
-\par V následujícím kroku se musí vybrat číslo $e$, pro které plati, ze je nesoudelne s $\phi (N)$.
-Pro nalezeni $e$ lze vyuzit rozsireny Eukliduv algoritmus.
-Poslednim krokem je urcit číslo $d$. Pro d plati:
+\subsection{Výpočet klíčů teorie}
+Nejdřív se vybírá dvojice prvočísel: $p, q$.
+Následně si vypočítá jejich násobek. Označíme ho za $N$.
+Dále si nadefinujeme $\phi (N)$ jako $(p - 1) * (q - 1)$.
+\par V následujícím kroku se musí vybrat číslo $e$, pro které platí, že je nesoudělné s $\phi (N)$.
+Pro nalezeni $e$ lze využít rozšířeny Euklidův algoritmus.
+Z praktického hlediska se číslo $e$ vybírá tak, aby obsahovalo malý počet bitu rovných $1$.
+To je z důvodu rychlejšího šifrovaní, které se provádí pomoci umocňovaní.
+Posledním krokem je určit číslo $d$. Pro d platí:
 $$ ed \bmod \phi (N) = 1 $$
-Verejny klic je pak dvojice: $e, N$ \\
-Privatni klic je pak dvojice: $d, N$
+Veřejný klíč je pak dvojice: $e, N$ \\
+Privátní klíč je pak dvojice: $d, N$
 
-\subsection{Vypocet klicu ukazka}
-\noindent Zvolime si nejprve $p, q$:
+\subsection{Výpočet klíčů ukázka}
+\noindent Zvolíme si nejprve $p, q$:
 $$p = 83, q = 89$$
-Spocitam $N, \phi (N)$:
+Spočítám $N, \phi (N)$:
 $$N = pq = 83 * 89 = 7387$$
 $$\phi (N) = (p - 1)(q - 1) = 82 * 88 = 7216$$
-Ziskam $e, d$:
+Získám $e, d$:
 $$e = 3 \because gcd(e, \phi (N)) = 1$$
 $$d = 4811 \because ed \bmod \phi (N) = 1$$
-Poskladam klice:
+Poskládám klíče:
 Public: $(3, 7387)$
 Private: $(4811, 7387)$
 
-
-\subsection{Sifrovani a desifrovani}
-Nejdriv si popisem sifrovani.
-Mejme zpravu m a public klic $(e, N)$. Pak se zprava zasifruje do $c$ nasledovne:
+\subsection{Šifrovaní a dešifrovaní}
+Nejdřív si popisem šifrovaní.
+Mějme zprávu $m$ a public klíč $(e, N)$.
+Pak se zprava zašifruje do $c$ následovně:
 $$c = m^e \bmod N$$
-Proto abychm mohli zprávy dešifrovat, potrénujeme privatni klic. Pak se zprava $c$ desefruje pomoci privátního klice $(d, N)$ do $m$ nasledne:
+\par Proto abychom mohli zprávy dešifrovat, potrénujeme privátní klíč.
+Pak se zprava $c$ dešifruje pomoci privátního klíče $(d, N)$ do $m$ následně:
 $$m = c^d \bmod N$$
-Vsime me si, ze muze docházet k umocneni velkou exponentou.
+\par Všimneme si, že může docházet k umocnění velkou exponentou.
+Tento výpočet by mohl trvat dost dlouho a zároveň by se spotřebovalo víc paměti pro velká čísla.
+Proto v praxi se využívá úspornější metoda, která využívá rovnost:
+$$(a * b) \bmod N = ((a \bmod N)(b \bmod N)) \bmod N$$
+Tedy můžeme modulit po každém násobeni.
+Však počet iteraci násobeni bude roven hodnotě exponentu.
+Pro jejich zmenšeni lze využít binární umocňovaní.
 
 \subsection{Prolomeni RSA}
-Jak jiz bylo zmineno, RSA se povazuje za bezpečnou sifru. Na venek je prestupna jen zasifrovana zprava c a verejny klic (e, N), který byla zprava zasifrovana.
+Jak již bylo zmíněno, RSA se povazuje za bezpečnou šifru.
+Na venek je přístupna jen zašifrovaná zprava $c$ a veřejný klíč $(e, N)$, kterým byla zprava zašifrovaná.
 
-\par Pro desifrovani potrebujem privatni klic $(d, N)$.
-Pro vypocet $d$ potrebujem si dopočítat $\phi (N)$, který se pocita z $p$ a $q$.
-Nastesti nebo k nestesti, zalezi na pohledu, zname $N$, coz je soucin $p$ a $q$.
-Takze potrebujem jen rozlozit $N$ na soucin dvou prvočísel neboli faktorizovat.
+\par Pro dešifrovaní potřebujme privátní klíč $(d, N)$.
+Pro výpočet $d$ potřebujeme si dopočítat $\phi (N)$, který se počítá z $p$ a $q$.
+Naštěstí nebo k neštěstí, záleží na pohledu, známe $N$, což je součin $p$ a $q$.
+Takže potřebujeme jen rozložit $N$ na součin dvou prvočísel neboli faktorizovat.
 
-\par Zatim neexistuje zadny algoritmus pro faktorizaci, který by bezel na klasickem pocitaci za polynomialni cas.
-Avsak v roce 1994 se podarilo P. Shorovi, americkému profesorovi matematiky v MIT, vymyslet algorithmus, který by bezel castecne na kvantovem pocitaci, a výsledkem je rozlozene číslo na soucin prvočísel.
-Ten algoritmus si pojmenoval jako Shoruv algoritmus.[\url{https://arxiv.org/pdf/quant-ph/9508027.pdf}]
-
+\par Zatím neexistuje žádný algoritmus pro faktorizaci, který by běžel na klasickém počítací za polynomiální čas.
+Avšak v roce 1994 se podařilo P. Shorovi, americkému profesorovi matematiky v MIT, vymyslet algoritmus, který by běžel částečné na kvantovém počítací, a výsledkem je rozložené číslo na součin prvočísel.
+Ten algoritmus si pojmenoval jako Shorův algoritmus.[\url{https://arxiv.org/pdf/quant-ph/9508027.pdf}]
 
 \newpage
 
-\section{Uvod do Kvantovych pocitacu}
-\subsection{Co je kvantovy pocitac?}
-Kvantovy pocitac je teoriticky model zarizeni pro vypocty.
-Primo vyuziva fenomény z kvantove mechaniky jako superpozice nebo interference.
-Zatím co klasicky pocitac operuje s bity, kvantovy pocitac operuje s qubity.
-Jednotlivym skupinam qubitu se říká registr.
+\section{Úvod do Kvantových počítačů}
+\subsection{Co je kvantový počítač?}
+Kvantový počítač je teoreticky model zařízeni pro výpočty.
+Primo využívá fenomény z kvantové mechaniky jako superpozice nebo interference.
+Zatím co klasicky počítač operuje s bity, kvantový počítač operuje s qubity.
+Jednotlivým skupinám qubitu se říká registr.
 
 \subsection{Co je to Qubit?}
-Klasicky bit v pocitaci muze nabývat hodnot ${0, 1}$. Qubit muze byt $0$, $1$ nebo kombinaci obou. Da se zapsat jako vektor:
+Klasicky bit v počítací může nabývat hodnot ${0, 1}$. Qubit může byt $0$, $1$ nebo kombinaci obou. Da se zapsat jako vektor:
 $$|q\rangle = \alpha|0\rangle + \beta|1\rangle$$
-\par kde $\alpha$ a $\beta$ jsou koeficienty, které urcuji pravdepodobnost změřeni qubitu ve stavu $0$ nebo $1$.
-Soucet druhých mocnin koeficientu se musí rovnat $1$:
+\par kde $\alpha$ a $\beta$ jsou koeficienty, které určují pravděpodobnost změřeni qubitu ve stavu $0$ nebo $1$.
+Součet druhých mocnin koeficientu se musí rovnat $1$:
 $$\alpha^2 + \beta^2 = 1$$
-\par Zapis $|0\rangle$ a $|1\rangle$ neni nic jiného nez jenom zkraceny zapis vektoru.
-Muzeme to tedy rozepsat takto:
+\par Zápis $|0\rangle$ a $|1\rangle$ není nic jiného, než jenom zkráceny zápis vektoru.
+Můžeme je rozepsat takto:
 $$|0\rangle = \begin{bmatrix}
         1 \\
         0
@@ -131,14 +147,14 @@ $$|0\rangle = \begin{bmatrix}
         0 \\
         1
     \end{bmatrix}  $$
-\par Muzem tedy upravit a prepsat stav qubitu $|q\rangle$ jako:
+\par Upravíme a přepíšeme stav qubitu $|q\rangle$ jako:
 $$|q\rangle = \begin{bmatrix}
         \alpha \\
         \beta
     \end{bmatrix}$$
 
-\par Ukazeme si, jak matematicky funguje mereni.
-Proto abychom zjistili pravdepodobnost pro konkretni stav, nam staci umocnit na druhou násobek transpozovane matice hledaneho stavu a matici $|q\rangle$:
+\par Ukážeme si, jak matematicky funguje měřeni.
+Proto abychom zjistili pravděpodobnost pro konkrétní stav, nám stačí umocnit na druhou násobek transponovaného vektoru hledaného stavu a vektor $|q\rangle$:
 $$|\langle 0 | q \rangle|^2 = \abs*{\begin{bmatrix}
             1 & 0
         \end{bmatrix}\begin{bmatrix}
@@ -155,12 +171,11 @@ $$|\langle 1 | q \rangle|^2 = \abs*{\begin{bmatrix}
 
 
 
-
 \subsection{Registr Qubitu}
-Ve výpočtech většinou nebudeme pracovat s jednym qubitem ale s celym registrem qubitu. Zkraceny zapis by vypadal takto:
+Ve výpočtech většinou nebudeme pracovat s jedným qubitem ale s celým registrem qubitu. Zkráceny zápis by vypadal takto:
 $$|001\rangle$$
-\par To znamena, ze mam 3 qubity, první 2 jsou nastavene na 0, poslední je nastaven na 1.
-Když budeme chtit si to představit jako vektor, staci zjiskat kronekeruv soucin:
+\par To znamená, že mam 3 qubity, první 2 jsou nastavené na 0, poslední je nastaven na 1.
+Když budeme chtít si to představit jako vektor, stačí získat kronekeruv součin:
 $$|q\rangle = |001\rangle = |0\rangle \otimes |0\rangle \otimes |1\rangle = \begin{bmatrix}
         0 \\
         1 \\
@@ -171,30 +186,36 @@ $$|q\rangle = |001\rangle = |0\rangle \otimes |0\rangle \otimes |1\rangle = \beg
         0 \\
         0 \\
     \end{bmatrix}$$
-\par Pravidla pro mereni funguji stejne:
+\par Pravidla pro měřeni funguji stejně:
 $$|\langle001|q\rangle|^2 = 1$$
 $$|\langle 011|q\rangle|^2 = 0$$
 
-
-\subsection{Kvantove hradlo}
-V booleve algebre mame logicke ventily typu OR, AND, XOR. To jsou ventily, které dostavaji vstup bitu a produkuji vystup. Kvantove pocitace mají něco podobneho. Nejvetsi rozdil je v tom, ze kvantove ventily provádí jenom reverzibilni operace.
-Všechna kvantova hradla jsou reverzibilni. To znamena, ze kdybychom aplikovali dve hradla za sebou, budeme mit na vystupu druhého hradla presne to, co jsme meli na vstupu prvního hradla.
-\par Každý hradlo je matematicky definovano čtvercovou matici o rozmerech $2^n \times 2^n$, kde $n$ je počet qubitu. Pro aplikovani hradla je potřeba vynásobit mezi sebou matici hradla a vektor stavu $|q\rangle$.
-\par Zakladni kvantove hradlo je \textbf{I} jako identita. Presneji receno nedela nic ale i tak bude potřeba pro nektere vypocty. Jeji matice vypada takto:
+\subsection{Kvantové hradlo}
+V booleve algebře máme logická hradla typu OR, AND, XOR.
+To jsou hradla, které dostávají vstup bitu a produkuji vystup.
+Kvantové počítače operuji s něčím podobným.
+Největší rozdíl je v tom, že kvantová hradla provádí jenom reverzibilní operace.
+Všechna kvantova hradla jsou reverzibilní.
+To znamená, že kdybychom aplikovali dvě hradla za sebou, budeme mít na výstupu druhého hradla přesně to, co jsme měli na vstupu prvního hradla.
+\par Každý hradlo je matematicky definováno čtvercovou matici o rozměrech $2^n \times 2^n$, kde $n$ je počet qubitu.
+Pro aplikovaní hradla je potřeba vynásobit mezi sebou matici hradla a vektor stavu $|q\rangle$.
+\par Základní kvantové hradlo je \textbf{I} jako identita.
+Přesněji řečeno neděla nic ale i tak bude potřeba pro některé výpočty.
+Její matice vypadá takto:
 $$I = \begin{bmatrix}
         1 & 0 \\
         0 & 1
     \end{bmatrix}$$
-\par Nejjednodussi reverzibilni hradlo v klasickem pocitaci je NOT.
-Provadi negaci bitu. V kvantovem svete existuje podobny hradlo, které také neguje hodnotu.
-Presneji receno otaci  Blochovou kouli podle $x$ osy o $\pi$ radianu. Znaci se jako \textbf{X} gate.
-Jeho matice je nasledujici:
+\par Nejjednodušší reverzibilní hradlo v klasickém počítací je NOT.
+Provádí negaci bitu. V kvantovém světě existuje podobné hradlo, které také neguje hodnotu.
+Přesněji řečeno otáčí Blochovou kouli podle $x$ osy o $\pi$ radiánu. Značí se jako \textbf{X} gate.
+Jeho matice je následující:
 $$X = \begin{bmatrix}
         0 & 1 \\
         1 & 0
     \end{bmatrix}$$
-\par Jako dukaz, ze se jedna o hradlo reverzibilni, muzem zkusit je poskládat za sebou a podivat se co nam vyjde.
-To znamena, ze je vynasobime mezi sebou:
+\par Jako důkaz, že se jedna o hradlo reverzibilní, mužem zkusit je poskládat za sebou a podívat se co nám vyjde.
+To znamená, ze jejich matice vynásobíme mezi sebou:
 $$XX = \begin{bmatrix}
         0 & 1 \\
         1 & 0
@@ -206,14 +227,14 @@ $$XX = \begin{bmatrix}
         0 & 1
     \end{bmatrix} = I$$
 
-\par Ve vysledku mame hradlo \textbf{I}, které jak vime nedela nic s vektorem stavu $|q\rangle$.
-\par Dalsim hodne zajimavym hradlem, který bude potřeba pro Shoruv algorithmus je Hadamard gate, který se znaci \textbf{H}. Jeho matice:
+\par Ve výsledku máme hradlo \textbf{I}, které jak víme neděla nic s vektorem stavu $|q\rangle$.
+\par Dalším hodně zajímavým hradlem, který bude potřeba pro Shorův algoritmus je Hadamard gate, který se značí \textbf{H}. Jeho matice:
 $$H = \frac{1}{\sqrt{2}}\begin{bmatrix}
         1 & 1  \\
         1 & -1
     \end{bmatrix}$$
-\par Toto hradlo prevadi qubit do stavu superpozice. Dulezite je zminit, ze superpozice vytvorena z qubitu ve stavu 0, se bude vyrazne lisit od superpozice vytvorene z qubitu ve stavu 1.
-Tady je vypocet:
+\par Toto hradlo převádí qubit do stavu superpozice. Důležité je zmínit, ze superpozice vytvořena z qubitu ve stavu 0, se bude výrazně lišit od superpozice vytvořené z qubitu ve stavu 1.
+Tady je výpočet:
 $$H|0\rangle = \frac{1}{\sqrt{2}}\begin{bmatrix}
         1 & 1  \\
         1 & -1
@@ -236,14 +257,13 @@ $$H|1\rangle = \frac{1}{\sqrt{2}}\begin{bmatrix}
         -1
     \end{bmatrix} = \frac{|0\rangle - |1\rangle}{\sqrt{2}} = |-\rangle$$
 
-\par Vsimne te si, ze rozdil je pouze v znamenku u koeficientu $\beta$. Proto první superpozice se oznacuje jako $|+\rangle$ a druha jako $|-\rangle$.
-Zajimavy je, ze když provedem mereni stavu superpozice, vyjde nam, ze je $\frac{1}{2}$ sance, ze qubit bude ve stavu 0 a stejna sance, ze bude ve stavu 1.
+\par Všimnete si, že rozdíl je pouze v znaménku u koeficientu $\beta$. Proto první superpozice se označuje jako $|+\rangle$ a druha jako $|-\rangle$.
+Zajímavý je, ze když provedeme měřeni stavu superpozice, vyjde nám, ze je $\frac{1}{2}$ šance, ze qubit bude ve stavu 0 a stejná šance, ze bude ve stavu 1.
 
-
-\subsection{Ventily s kontrolním qubitem}
-Existuje další typ hradel, kterym se anglicky říká Control gates.
-Chovani těchto hradel je zavisle na jakemsi kontrolním qubitu.
-Nejznamejsi pripad je CNOT neboli Controlled NOT. Matice hradla je:
+\subsection{Hradla s kontrolním qubitem}
+Existuje další typ hradel, kterým se anglicky říká Control gates.
+Chovaní těchto hradel je závisle na jakémsi kontrolním qubitu.
+Nejznámější případ je CNOT neboli Controlled NOT. Matice hradla je:
 $$CNOT = \begin{bmatrix}
         1 & 0 & 0 & 0 \\
         0 & 1 & 0 & 0 \\
@@ -251,8 +271,8 @@ $$CNOT = \begin{bmatrix}
         0 & 0 & 1 & 0
     \end{bmatrix}$$
 \par Toto hradlo dostava na vstupu dva qubity.
-Zde dochazi k invertaci v pripade, ze je první qubit ve stavu 1.
-Jinak se nedeje nic. Par prikladu:
+Zde dochází k invertovaní v případě, že je první qubit ve stavu 1.
+Jinak se neděje nic. Par přikladu:
 $$CNOT|01\rangle = \begin{bmatrix}
         1 & 0 & 0 & 0 \\
         0 & 1 & 0 & 0 \\
@@ -287,7 +307,7 @@ $$CNOT|11\rangle = \begin{bmatrix}
         0
     \end{bmatrix} = |10\rangle$$
 
-\par Je mozne poskládat matici pro libovolny kontrolni hradlo. Ukazu to na prikladu CNOTu.
+\par Je možné poskládat matici pro libovolné kontrolní hradlo. Ukážu to na přikladu CNOTu.
 $$CNOT = |1 \rangle\langle 1| \otimes X + |0 \rangle\langle 0| \otimes I$$
 $$CNOT = \begin{bmatrix}
         0 \\
@@ -323,19 +343,19 @@ $$CNOT = \begin{bmatrix}
         0 & 0 & 1 & 0
     \end{bmatrix}$$
 
-\subsection{Vzajemne spoutane qubity – Bellmanuv Stav}
-Myslim si, ze je dost jasne jak se budou chovat 2 qubity po CNOTu.
-Control qubit zustane stejny ale druhy(target) qubit se zmeni pokud je první ve stavu 1.
-Co se však stane, když controlni qubit bude v superpozici? Pojdme si to spočítat.
-Budeme mit tenhle pocatecni stav:
+\subsection{Vzájemně spoutané qubity – Bellmanuv Stav}
+Myslím si, že je dost jasné, jak se budou chovat 2 qubity po CNOTu.
+Control qubit zůstane stejný ale druhy(target) qubit se změní, pokud je první ve stavu 1.
+Co se však stane, když controlni qubit bude v superpozici? Pojďme si to spočítat.
+Budeme mít tenhle počáteční stav:
 $$|\phi_1 \rangle = |00\rangle = \begin{bmatrix}
         1 \\
         0 \\
         0 \\
         0
     \end{bmatrix}$$
-\par Proto abychom dostali stav superpozice, potrebujem ventil Hadamarda.
-V nasem pripade bude první qubit kontrolni, takze potrebujem aplikovat Hadamarda na první qubit:
+\par Proto abychom dostali stav superpozice, potřebujeme ventil Hadamarda.
+V našem případě bude první qubit kontrolní, takže potřebujeme aplikovat Hadamarda na první qubit:
 $$|\phi_2 \rangle = (H \otimes I) |\phi_1 \rangle = \frac{1}{\sqrt{2}} \begin{bmatrix}
         1 & 0 & 1  & 0  \\
         0 & 1 & 0  & 1  \\
@@ -352,8 +372,8 @@ $$|\phi_2 \rangle = (H \otimes I) |\phi_1 \rangle = \frac{1}{\sqrt{2}} \begin{bm
         1 \\
         0
     \end{bmatrix}$$
-\par Tento stav nam říká, ze je mozny po zmereni dostat bud $|00\rangle$ nebo $|10\rangle$ s $\frac{1}{2}$ pravdepodobnosti.
-Nasledne pojdme aplikovat CNOT:
+\par Tento stav nám říká, ze je možný po změřeni dostat bud $|00\rangle$ nebo $|10\rangle$ s $\frac{1}{2}$ pravděpodobnosti.
+Následně pojďme aplikovat CNOT:
 $$|\phi_3 \rangle = CNOT |\phi_2 \rangle = \frac{1}{\sqrt{2}} \begin{bmatrix}
         1 & 0 & 0 & 0 \\
         0 & 1 & 0 & 0 \\
@@ -370,16 +390,17 @@ $$|\phi_3 \rangle = CNOT |\phi_2 \rangle = \frac{1}{\sqrt{2}} \begin{bmatrix}
         0 \\
         1
     \end{bmatrix}$$
-\par Timto jsme dostali Belluv stav, při nemz jsou 2 qubity spolecne spoutany.
-Ted když provedem mereni, dostanem bud $|00\rangle$ nebo $|11\rangle$ s $\frac{1}{2}$ pravdepodobnosti.
-Tento stav se pouziva u algorithmu kvantove teleportace.
+\par Tímto jsme dostali Bellův stav, při němž jsou 2 qubity společně spoutány.
+Ted když provedeme měřeni, dostaneme bud $|00\rangle$ nebo $|11\rangle$ s $\frac{1}{2}$ pravděpodobnosti.
+Tento stav se používá u algoritmu kvantové teleportace.
 
 \subsection{Phase kick-back}
-Pojdme si podivat, co se stane, kdy aplikujem \textbf{X} gate na stav $|+\rangle$ nebo $|-\rangle$:
+\label{sec:phase_kickback}
+Pojďme si podívat, co se stane, pokud použijeme \textbf{X} gate na stav $|+\rangle$ nebo $|-\rangle$:
 $$X|+\rangle = \frac{1}{\sqrt{2}}\begin{bmatrix}
         0 & 1 \\
         1 & 0
-    \end{bmatrix} + \begin{bmatrix}
+    \end{bmatrix} \begin{bmatrix}
         1 \\
         1
     \end{bmatrix} = \frac{1}{\sqrt{2}} \begin{bmatrix}
@@ -390,7 +411,7 @@ $$X|+\rangle = \frac{1}{\sqrt{2}}\begin{bmatrix}
 $$X|-\rangle = \frac{1}{\sqrt{2}}\begin{bmatrix}
         0 & 1 \\
         1 & 0
-    \end{bmatrix} + \begin{bmatrix}
+    \end{bmatrix} \begin{bmatrix}
         1 \\
         -1
     \end{bmatrix} = \frac{1}{\sqrt{2}} \begin{bmatrix}
@@ -401,86 +422,96 @@ $$X|-\rangle = \frac{1}{\sqrt{2}}\begin{bmatrix}
         -1
     \end{bmatrix} $$
 \par Na první pohled nic moc překvapivého.
-Ale jedna se o první krok k porozumeni důležitého konceptu: phase kick-back.
-Drive jsme si mysleli, ze při pouziti CNOTu, ovlivnujem pouze cilovy qubit.
-Ale ted si ukazem, ze ovlivnujem i kontrolni.
-Pro demonstraci je potřeba CNOT aplikovat na cilovy qubit ve stavu superpozice.
-Nejdriv pro kontrolni ve stavu $|0\rangle$, nasledne ve stavu $|1\rangle$:
+Ale jedna se o první krok k porozumění důležitého konceptu: phase kick-back.
+Drive jsme si mysleli, že při použití CNOTu, ovlivňujme pouze cílový qubit.
+Ale teď si úkazem, že ovlivňujme i kontrolní.
+Pro demonstraci je potřeba CNOT aplikovat na cílový qubit ve stavu superpozice.
+Nejdřív pro kontrolní qubit ve stavu $|0\rangle$, následně ve stavu $|1\rangle$:
 $$CNOT |0-\rangle = |0\rangle \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$
 $$CNOT |1-\rangle = |1\rangle \left(X \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\right) = |1\rangle \left(-1\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\right) =$$
 $$= -|1\rangle \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$
-\par Obecne plati:
+\par Obecně platí:
 $$CNOT |b-\rangle = (-1)^b|b\rangle\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$:
-\par Je videt, ze jsme dokazali zmenit fazi kontrolního qubitu, když kontrolni qubit je v superpozici:
+\par Je vidět, že jsme dokázali změnit fázi kontrolního qubitu, když kontrolní qubit je v superpozici:
 $$CNOT\left((\alpha|0\rangle + \beta|1\rangle)\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\right) = (\alpha|0\rangle - \beta|1\rangle)\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$
 \newpage
 
-\section{QuantumEmulator – vlastni kvantovy simuator}
-\subsection{Uvod}
-QuantumEmulator – je moje vlastní Python knihovna, která mi pomáhala ve zkoumani funkcnosti kvantového pocitace.
-Nabizi funkce pro tvorbu kvantových algoritmu libovolne slozitosti.
-\par Jelikoz simulace kvantového pocitace je hodne o pocitani s maticemi, vybral jsem si knihovnu Numpy, která zjednodusuje praci s maticemi a celkove s vypocty.
-Numpy vyuziva funkce psane v jazyce C, a proto jsou vypocty optimalizovane.
+\section{QuantumEmulator – vlastni kvantový simulátor}
+\label{sec:QuantumEmulator}
+\subsection{Úvod}
+QuantumEmulator – je moje vlastní Python knihovna, která mi pomáhala ve zkoumaní funkčnosti kvantového počítače.
+Nabízí funkce pro tvorbu kvantových algoritmu libovolné složitosti.
+\par Jelikož simulace kvantového počítače je hodně o počítaní s maticemi, vybral jsem si knihovnu Numpy, která zjednodušuje prací s maticemi a celkově s výpočty.
+Numpy využívá funkce psané v jazyce C, a proto jsou výpočty optimalizované a rychlé.
 \par Projekt je pod licenzi MIT a lze ho najit na mem githubu zde: \url{https://github.com/DimaLeshchinskiy/QuantumEmulator}
 
 \subsection{QConstants}
-Tento soubor obsahuje předem definovane matice pro nejpouzivanejsi hradla a taky konstanty.
+Tento soubor obsahuje předem definované matice pro nejpoužívanější hradla a taky konstanty.
 \subsection{QCircuit}
-Tento soubor definuje tridu QCircuit, ktera obsahuje metody pro tvorbu kvantovych algoritmu.
-Nejdriv jsou definovane funkce pro tvorbu.
+Tento soubor definuje třídu QCircuit, která obsahuje metody pro tvorbu kvantových algoritmu.
+Nejdřív jsou definované funkce pro tvorbu.
 \begin{itemize}
-    \item \textbf{addQubits(initValues:array<int>)} - definuje pocatecni stav kvantoveho pocitace.
+    \item \textbf{addQubits(initValues:array<int>)} - definuje počáteční stav kvantového počítače.
           Na vstup dostava seznam z 0 a 1.
-    \item \textbf{addGate(gate:numpy.matrix, index:int)} - pridava hradlo pro jeden qubit s zadanym indexem.
-          Pro okolni qubity se pouzivat hradlo \textbf{I}
-          Na vstup dostava matici hradla definovannou pomoci Numpy a ciselny index, ktery odpovida indexu qubitu z pocatecniho stavu.
-    \item \textbf{addGates(gates:array<numpy.matrix>)} - pridava hradla pro celou skupinu qubitu.
+    \item \textbf{addGate(gate:numpy.matrix, index:int)} - přidává hradlo pro jeden qubit s zadaným indexem.
+          Pro okolní qubity se používá hradlo \textbf{I}
+          Na vstup dostava matici hradla definovanou pomoci Numpy a číselný index, který odpovídá indexu qubitu z počátečního stavu.
+    \item \textbf{addGates(gates:array<numpy.matrix>)} - přidává hradla pro celou skupinu qubitu.
           Na vstup dostava seznam z Numpy matic.
-    \item \textbf{addControlGate(controlIndexes:array<int>, targetIndex:int, gate:numpy.matrix)} - pridava Control gate.
-          Na vstup dostava seznam indexu qubitu, ktere budou hradlo ovladat, index ciloveho qubitu a Numpy matici jako matici hradla.
-    \item \textbf{addCustomMatrix(matrix:numpy.matrix)} - pridava vlastni matici do obvodu.
-          Na vstup dostava Numpy matici, ktera definuje skupinu hradel.
-    \item \textbf{addCNOT(controlIndex:int, targetIndex:int)} - pridava CNOT do obvodu.
-          Na vstup dostava index kontrolniho qubitu a index ciloveho qubitu.
-    \item \textbf{addToffoli(controlIndexes:array<int>, targetIndex:int)} - pridava Toffoli hradlo do obvodu.
-          Na vstup dostava seznam indexu qubitu, ktere budou hradlo ovladat a index ciloveho qubitu.
+    \item \textbf{addControlGate(controlIndexes:array<int>, targetIndex:int, gate:numpy.matrix)} - přidává Control gate.
+          Na vstup dostava seznam indexu qubitu, které budou hradlo ovládat, index cílového qubitu a Numpy matici jako matici hradla.
+    \item \textbf{addCustomMatrix(matrix:numpy.matrix)} - přidává vlastni matici do obvodu.
+          Na vstup dostava Numpy matici, která bude aplikovaná na všechny qubity naraz.
+    \item \textbf{addCNOT(controlIndex:int, targetIndex:int)} - přidává CNOT do obvodu.
+          Na vstup dostava index kontrolního qubitu a index cílového qubitu.
+    \item \textbf{addToffoli(controlIndexes:array<int>, targetIndex:int)} - přidává Toffoli hradlo do obvodu.
+          Na vstup dostava seznam indexu qubitu, které budou hradlo ovládat a index cílového qubitu.
+    \item \textbf{addSwap(index1:int, index2:int)} - přidává Swap hradlo do obvodu.
+          Na vstup dostava dva indexy qubitu, jejichž stavy budou prohozeny.
 \end{itemize}
-\par Dale jsou definovane funkce pro spusteni kvantove simulace.
-Tyto funkce by se meli poustet az potom co se cely algoritmus posklada pomoci tvoricich funkci:
+\par Dále jsou definované funkce pro spuštěni kvantové simulace.
+Tyto funkce by se měli pouštět až potom co se cely algoritmus poskládá pomoci tvořících funkci:
 \begin{itemize}
-    \item \textbf{simulate()} - provadi scitani vsech matic do jedne, v tom poradi v jakem byly zadany do algoritmu.
-    \item \textbf{measureAll()} - provadi mereni stavu kvantoveho pocitace na konci siimulace.
-          Tato funkce ma se poustet po dokonceni funkce \textbf{simulate()}.
-          Nejdriv si posklada vsechny kombinace moznych mereni a nasledne si pro ne dopocita pravdepodobnost se objevit.
-          Na konci nahodne dle pravdepodobnosti vybere jednu z kombinaci a tu vrati.
+    \item \textbf{simulate()} - provádí sčítaní všech matic do jedné, v tom poradí v jakém byly zadaný do algoritmu.
+    \item \textbf{measure()} - provádí měřeni stavu kvantového počítače na konci simulace.
+          Tato funkce se má pouštět po dokončeni funkce \textbf{simulate()}.
+          Nejdřív si poskládá všechny kombinace možných stavu po měřeni a následně si pro ne dopočítá pravděpodobnost výskytu.
+          Na konci náhodně dle pravděpodobnosti vybere jednu z kombinaci a tu vrátí.
+    \item \textbf{measureAll(indexes:array<int>)} - provádí měřeni stavu kvantového počítače na konci simulace.
+          Dostava seznam indexu qubitu pro měřeni.
+          Budou změřeny pouze uvedené qubity, ostatní se ignoruji.
+          Když je vstupní seznam prázdny, provádí se měřeni pro všechny qubity.
+          Tato funkce se má pouštět po dokončeni funkce \textbf{simulate()}.
+          Nejdřív si poskládá všechny kombinace možných stavu po měřeni a následně si pro ne dopočítá pravděpodobnost výskytu.
+          Vráti všechny možné stavy a jejich pravděpodobnosti.
 \end{itemize}
 \subsection{QColumn}
-Tento soubor  definuje napomocnou tridu QColumn, ktera reprezentuje jeden sloupec v zapisu kvantoveho algoritmu.
-Ma jen 2 funkce:
+Tento soubor definuje nápomocnou třídu QColumn, která reprezentuje jeden sloupec v zápisu kvantového algoritmu.
+Má jen 2 funkce:
 \begin{itemize}
-    \item \textbf{set(values:array<numpy.matrix>)} - pocita matici pro sloupec.
-          Na vstup dostava seznam Numpy matic, ktere definuji matice hradel.
-    \item \textbf{setControl(controlIndexes:array<int>, targetIndex:int, gate: numpy.matrix)} - pocita matici pro hradlo, ktere bude ovladano jednim nebo vice kontrolnimi qubity.
-          Na vstup dostava seznam indexu qubitu, ktere budou hradlo ovladat, index ciloveho qubitu a Numpy matici jako matici hradla.
+    \item \textbf{set(values:array<numpy.matrix>)} - počítá matici pro sloupec.
+          Na vstup dostava seznam Numpy matic, které definuji hradla.
+    \item \textbf{setControl(controlIndexes:array<int>, targetIndex:int, gate: numpy.matrix)} - počítá matici pro hradlo, které bude ovládáno jedním nebo vice kontrolními qubity.
+          Na vstup dostava seznam indexu qubitu, které budou hradlo ovládat, index cílového qubitu a Numpy matici hradla.
 \end{itemize}
 
 \subsection{Utility}
-Slozka util obsahuje napomocne funkce, ktere bud vyuzivam primo v hlavnich tridach emulatoru nebo byli potrebne pro moje experimenty s kvantovymy algorimty.
+Složka util obsahuje nápomocné funkce, které bud využívám primo v hlavních třídách emulátoru nebo byli potřebné pro moje experimenty s kvantovými algoritmy.
 \begin{itemize}
-    \item \textbf{int2bin.py} - obsahuje funkce pro prevod mezi desitkovou soustavou a soustavou binarni.
-    \item \textbf{anf.py} - obsahuje funkce pro vypocet ANF pro libovolnou funkci.
-          Bylo vyuzito pro vytvoreni blackboxu pro Deutsch–Jozsa algoritm.
+    \item \textbf{int2bin.py} - obsahuje funkce pro převod mezi desítkovou soustavou a soustavou binární.
+    \item \textbf{anf.py} - obsahuje funkce pro výpočet ANF pro libovolnou funkci.
+          Bylo využito pro vytvořeni blackboxu pro Deutsch–Jozsa algoritmus.
 \end{itemize}
 
 \newpage
 
-\section{Ukazky kodu}
-V tehle kapitole ukazu nazorne priklady vyuziti me knihovny.
-Vsechny tyhle ukazky jsou v souboru \textbf{example.py}.
+\section{Ukázky kódu}
+V téhle kapitole ukážu názorné příklady využiti mé knihovny.
+Všechny tyhle ukázky jsou v souboru \textbf{example.py}.
 
-\subsection{Dve hradla Hadamarda za sebou}
-Tenhle kod simuluje jednoduchy obvod, ve kterem se za sebou sklada 2 krat hradlo Hadamarda.
-Po aplikaci dvou stejnych hradel, se stav kvantoveho pocitace nezmeni, coz je videt z ukazky.
+\subsection{Dvě hradla Hadamarda za sebou}
+Tenhle kód simuluje jednoduchý obvod, ve kterém se za sebou skládá 2 krát hradlo Hadamarda.
+Po aplikaci dvou stejných hradel, se stav kvantového počítače nezmění, což je vidět z ukázky.
 \begin{lstlisting}[language=Python, caption=Double Hadamard gates]
 from qsim.qcircuit import QCircuit
 from qsim.qconstants import H
@@ -491,12 +522,16 @@ circuit.addGate(H, 0) # add 1 column of gates
 circuit.addGate(H, 0) # add 2 column of gates
 
 circuit.simulate() # make calculations
-state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will be always 0
+state = circuit.measure() # get state of all qubits
+print("#EXAMPLE 1", state) # in this case output will be always 0
 \end{lstlisting}
+\begin{figure}[H]
+    \includegraphics[scale=.5]{two_h_gates_scheme}
+    \centering
+\end{figure}
 
 \subsection{Hradlo X}
-Tenhle kod simuluje jednoduchy obvod, ktery nazorne ukazuje chovani hradla X.
+Tenhle kód simuluje jednoduchý obvod, který názorné ukazuje chovaní hradla X.
 \begin{lstlisting}[language=Python, caption=X gates]
 from qsim.qcircuit import QCircuit
 from qsim.qconstants import X
@@ -507,12 +542,16 @@ circuit.addGate(X, 1) # add 1 column of gates
 circuit.addGates([X, X]) # add 2 column of gates
 
 circuit.simulate() # make calculations
-state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will be always [1, 0]
+state = circuit.measure() # get state of all qubits
+print("#EXAMPLE 2", state) # in this case output will be always [1, 0]
 \end{lstlisting}
+\begin{figure}[H]
+    \includegraphics[scale=.5]{multiple_qubits_scheme}
+    \centering
+\end{figure}
 
 \subsection{CNOT ukazka}
-Tenhle kod ukazuje, jak se vyuziva hradlo CNOT.
+Tenhle kód ukazuje, jak se využívá hradlo CNOT.
 \begin{lstlisting}[language=Python, caption=CNOT example]
 from qsim.qcircuit import QCircuit
 circuit = QCircuit()
@@ -521,12 +560,16 @@ circuit.addQubits(1, 0, 0) # create 2 qubits with init value 0
 circuit.addCNOT(controlIndex=0, targetIndex=2) # add CNOT gate with 0 index qubit as control and 2 index as target
 
 circuit.simulate() # make calculations
-state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will be always [1, 0, 1]
+state = circuit.measure() # get state of all qubits
+print("#EXAMPLE 3", state) # in this case output will be always [1, 0, 1]
 \end{lstlisting}
+\begin{figure}[H]
+    \includegraphics[scale=.5]{cnot_scheme}
+    \centering
+\end{figure}
 
 \subsection{Belluv stav}
-Tenhle kod ukazuje, jak lze vytvorit Belluv stav.
+Tenhle kód ukazuje, jak lze vytvořit Bellův stav.
 \begin{lstlisting}[language=Python, caption=Bell state]
 from qsim.qcircuit import QCircuit
 from qsim.qconstants import H, I
@@ -537,12 +580,17 @@ circuit.addGates([H, I])  # add 1 column of gates
 circuit.addCNOT(controlIndex=0, targetIndex=1) # add CNOT gate with 0 index qubit as control and 1 index as target
 
 circuit.simulate() # make calculations
-state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will [0, 0] or [1, 1] with probability of 0.5
+state = circuit.measure() # get state of all qubits
+print("#EXAMPLE 4", circuit.measureAll()) # get all posible states
+print("#EXAMPLE 4", state) # in this case output will [0, 0] or [1, 1] with probability of 0.5
 \end{lstlisting}
+\begin{figure}[H]
+    \includegraphics[scale=.5]{bell_state_scheme}
+    \centering
+\end{figure}
 
 \subsection{Toffoli hradlo}
-Tenhle kod ukazuje, jak lze vytvorit Toffoli hradlo.
+Tenhle kód ukazuje, jak lze vytvořit Toffoli hradlo.
 \begin{lstlisting}[language=Python, caption=Toffoli gate]
 from qsim.qcircuit import QCircuit
 circuit = QCircuit()
@@ -551,48 +599,221 @@ circuit.addQubits(1, 1, 1) # create 2 qubits with init value 0
 circuit.addToffoli([0, 1], 2) # add Toffole gate with 0, 1 qubits as control and 2 qubit as target
 
 circuit.simulate() # make calculations
-state = circuit.measureAll() # get state of all qubits
-print(state) # in this case output will be always [1, 1, 0]
+state = circuit.measure() # get state of all qubits
+print("#EXAMPLE 5", state) # in this case output will be always [1, 1, 0]
+\end{lstlisting}
+\begin{figure}[H]
+    \includegraphics[scale=.7]{toffoli_scheme}
+    \centering
+\end{figure}
+
+\subsection{Swap hradlo}
+Tenhle kód ukazuje, jak lze vytvořit Swap hradlo.
+\begin{lstlisting}[language=Python, caption=Toffoli gate]
+from qsim.qcircuit import QCircuit
+from qsim.qconstants import H, I
+circuit = QCircuit()
+
+circuit.addQubits(0, 1, 0) # create 3 qubits with init values 0, 1, 0
+circuit.addGates([H, I, I])  # add 1 column of gates; create states |+10>
+circuit.addSwap(0, 2) # swap qubits
+
+circuit.simulate() # make calculations
+state = circuit.measureAll() # get all posible states
+print("#EXAMPLE 6", state)
+\end{lstlisting}
+\begin{figure}[H]
+    \includegraphics[scale=.7]{swap_scheme}
+    \centering
+\end{figure}
+
+\newpage
+
+\section{Shorův algoritmus}
+\subsection{Úvod}
+Profesor matematiky, P. Shor, přisel na to, jak rozložit číslo na součin dvou prvočísel za logaritmicky čas.
+Avšak jeho algoritmus vyžaduje použít kvantové výpočty. Zjistil, že pro rozloženi čísla,
+je potřeba najit periodu funkce $f(x) = a^x \bmod N$, kde $a, N, r \in \mathbb{N}$.
+Pro a platí $a < N$ a zároveň $gcd(a, N) = 1$.
+Perioda $r$ je pak nejmenší možné číslo, pro které platí:
+$$a^r \bmod N = 1$$
+\par Proměna $a$ se vybere náhodně z rozsahu $1 < a < N$.
+Když $gcd(a, N) \ne 1$, pak jedním ze součinitelů čísla $N$ je jejich nevětší společný dělitel.
+Druhy lze nalézt pomoci děleni. Jinak se musí hledat perioda.
+\par Problém nalezeni periody, je velice známy ve světě kvantových algoritmu. Tento algoritmus popisu v další sekci.
+\par Když periodu najdeme, zbývá jen dopočítat činitele čísla $N$ za pomocí Euklidova algoritmu pro nalezeni největšího společného dělitele:
+$$p, q = gcd(a^\frac{r}{2} \pm 1, N)$$
+
+\subsection{Nalezeni periody funkce}
+Pro nalezeni periody se využívá Quantum Phase Estimation algoritmus. Jeho schéma:
+\begin{figure}[H]
+    \includegraphics[scale=.5]{High-level-diagram-of-Shors-algorithm-Upper-register-consists-of-2n-qubits-and-holds}
+    \centering
+\end{figure}
+\par Je potřeba si vytvořit dva registry. První registr pojmenuji jako kontrolní. Druhy jako cílový.
+Na velikost kontrolního registru záleží to, jak moc bude velká úspěšnost dostat správný výsledek a také jak moc přesne výpočty budou.
+Velikost cílového registru zvolíme jako $n = log_2(N)$.
+Pak velikost $2n$ bude dostačující pro kontrolní registr.
+\par Všechny qubity z kontrolního registru dáme do stavu $0$. Všechny qubity z cílového registru dáme do stavu $0$ až na poslední qubit. Ten bude ve stavu 1.
+Označím je jako velké $|\textbf{0}\rangle$ a velké $|\textbf{1}\rangle$
+Takže po inicializaci bude stav kvantového počítače:
+$$|\phi_1\rangle = |\textbf{0}\rangle\otimes|\textbf{1}\rangle$$
+\par Dalším krokem je potřeba dostat kontrolní registr do superpozice pomoci Hadamard hradel:
+$$|\phi_2\rangle = (H^{\otimes 2n}\otimes I^{\otimes n})(|\textbf{0}\rangle\otimes|\textbf{1}\rangle)$$
+\par Ted je potřeba říct, co je Uf. Toto hradlo aplikuje funkci $f(x)$ na cílový registr.
+Tim, ze je kontrolní registr v superpozici, dochází k \hyperref[sec:phase_kickback]{phase kick-back} jevu.
+Proto zároveň při aplikaci Uf se zakóduje do fázi qubitu z kontrolního registru potřebná informace.
+$$Uf|x\rangle|y\rangle = |x\rangle|y*f(x)\rangle = |x\rangle|ya^x \bmod N \rangle$$
+\par Posledním krokem je $QFT^{-1}$.
+To je potřeba pro transformaci informace z fázi kontrolních qubitu.
+Ve výsledku, když změříme kontrolní registr, dostaneme číslo $x_1$.
+Ted je potřeba pomoci continued fraction algoritmu, najit nejbližší zlomek ke zlomku $\frac{x_1}{2^{2n}}$, který nebude mít jmenovatel větší než $N$.
+Pravě jmenovatel nalezeného zlomku je hledané $r$.
+\par Tento algoritmus nemusí vždy dopočítat $r$ správně.
+Proto je potřeba spustit tento algoritmus vice krát.
+
+\subsection{Implementace}
+Pro implementaci jsem využil svůj \hyperref[sec:QuantumEmulator]{kvantový simulátor}.
+Kompletní kód lze najit na githubu v souboru shor\_example.py.
+\begin{lstlisting}[language=Python, caption=Shor algorithm]
+from fractions import Fraction
+from math import ceil
+from qsim.qcircuit import QCircuit
+from qsim.qconstants import H, I, P
+from qsim.util.int2bin import binToInt
+import random
+
+from numpy import log2, pi, zeros
+
+# euclide algo
+def gcd(m, n):
+    if m < n: 
+        (m, n) = (n, m)
+    if(m % n) == 0:
+        return n 
+    else:
+        return (gcd(n, m % n))
+
+# return controlled phaseGate incerse R
+def controlled_phaseGate_inverse(m):
+    return P(-(2 * pi) / (2 ** m))
+
+def QFT_inverse(circuit, n):
+    phaseGates = [controlled_phaseGate_inverse(i) for i in range(2, n + 1)]
+
+    for i in range(n // 2):
+        circuit.addSwap(i, n - i - 1)
+
+    for i in range(n, 0, -1):
+        for phaseGateIndex in range(n - i, 0, -1):
+            circuit.addControlGate(i - 1, phaseGateIndex + i - 1, phaseGates[phaseGateIndex - 1])
+
+        circuit.addGate(H, i - 1)
+
+def Uf(circuit, a, N):
+    n1 = 2 * ceil(log2(N)) # first register size
+    n2 = ceil(log2(N)) # second register size
+    matrix = zeros((2 ** circuit.qbits_size, 2 ** circuit.qbits_size)) # fill matrix with zeros
+
+    for i in range(2 ** circuit.qbits_size):
+        x = i >> n2 # high n bits
+        y = i & (2 ** n2 - 1) # low n bits
+
+        # let z = (x, ya^x mod N)
+        # (ya^x mod N) = (y*(a^x mod N) mod N), so for better performace
+        # we will calculate (a^x mod N) separatly, because exponent could be large
+        z = x << n2
+        if y < N:
+            func = pow(base=a, exp=x, mod=N) 
+            z = z | ((y * func) % N) 
+        else:
+            z = z | y
+
+        # insert 1 into column_i and row_z
+        matrix[i, z] = 1
+    
+    # insert permutation matrix to the circuit
+    circuit.addCustomMatrix(matrix)
+
+def orderFinding(a, N):
+    n1 = 2 * ceil(log2(N)) # first register size
+    n2 = ceil(log2(N)) # second register size
+    circuit = QCircuit()
+
+    # fill first(control) register of size n with state 0 (|000...000>)
+    # fill second(target) register of size n with state 1 (|000...001>)
+    # this array represents two registers
+    registers = [0] * (n1 + n2)
+    registers[-1] = 1
+    circuit.addQubits(*registers)
+
+    # apply QFT to the control register
+    # or apply H, which has same behavior as QFT applied to |0> ^ n
+    # also it has faster implementation
+    gatesH = [H] * n1
+    gatesI = [I] * n2
+    circuit.addGates([*gatesH, *gatesI])
+
+    # apply Uf
+    Uf(circuit, a, N)
+
+    # apply QFT_inverse to the control register
+    QFT_inverse(circuit, n1)
+
+    circuit.simulate()
+
+    all_r = set()
+    measurments = circuit.measureAll(range(8))
+    for measurement in measurments:
+        state, probability = measurement
+        controlRegInt = binToInt(state)
+
+        frac = Fraction(controlRegInt, 2**n1).limit_denominator(N)
+        all_r.add(frac.denominator)
+    
+    return all_r
+
+# https://en.wikipedia.org/wiki/Shor%27s_algorithm
+def Factorization(N):
+    # step 0, if N is even
+    if N % 2 == 0:
+        return (2, int(N / 2))
+
+    # step 1
+    checked_a = []
+    while True:
+        a = 0
+
+        while True:
+            a = random.randint(2, N - 1)
+            if a not in checked_a:
+                checked_a.append(a)
+                break
+
+        K = gcd(a, N)
+
+        # step 2, 3
+        if K != 1:
+            return (K, int(N // K))
+        # step 4
+        else:
+            all_r = orderFinding(a, N)
+
+            # step 5, 6, 7 
+            for r in all_r:
+                if r % 2 == 0 and pow(base=a, exp=r, mod=N) == 1:
+                    p = gcd(pow(base=a, exp=r // 2) - 1, N)
+                    q = gcd(pow(base=a, exp=r // 2) + 1, N)
+                    print(f"r = {r}")
+                    return (p, q)
+
+# N = 15 max
+print("Factors are: ", Factorization(15))
 \end{lstlisting}
 
 \newpage
 
-
-\section{Shoruv algortmus}
-\subsection{Uvod}
-Profesor matematiky, P. Shor, prisel na to, jak rozlozit cislo na soucin dvou prvocisel za logaritmicky cas.
-Avsak jeho algoritmus vyzaduje pouzit kvantove vypocty. Zjistil, ze pro rozlozeni cisla,
-je potreba najit periodu funkce $f(x) = a^r \bmod N$, kde $a, N, r \in \mathbb{N}$.
-Pro a plati $a < N$.
-Perioda $r$ je pak nejmensi mozne cislo, pro ktere plati:
-$$a^r \bmod N = 1$$
-\par Problem nalezeni periody, je velice znamy ve svete kvantovych algoritmu. Tento algoritmus popisu v dalsi sekci.
-\par Kdyz periodu najdem, zbyva jen dopocitat cinitele cisla $N$ zapomoci Euklidova algoritmu pro nalezeni nejvetsiho spolecneho delitele:
-$$p, q = gcd(a^\frac{r}{2} \pm 1, N)$$
-
-\subsection{Nalezeni periody funkce}
-Pro nalezeni periody se vyuziva Quantum Phase Estimation algorithm. Jeho schema:
-\begin{figure}[htbp]
-    \includegraphics[scale=.5]{High-level-diagram-of-Shors-algorithm-Upper-register-consists-of-2n-qubits-and-holds}
-    \centering
-\end{figure}
-\par Je potreba si vytvorit dva registry. Prvni registr pojmenuju jako kontrolni. Druhy jako cilovy.
-Na velikost kontrolniho registru zalezei, jak moc je velka uspesnost dostat spravny vysledek a take jak moc presne vypocty budou.
-Velikost ciloveho registru zvolime jako $n = log_2(N)$.
-Pak velikost $2n$ bude dostacujici pro kontrolni registr.
-\par Vsechny qubity z kontrolniho registru dame do stavu $0$. Vsechny qubity z ciloveho registru dame do stavu $0$ az na posledni qubit. Ten bude ve stavu 1.
-Takze po inicializaci bude stav kvanotveho pocitace:
-$$|\phi\rangle = |0\rangle^{\otimes 2n} |1\rangle$$ 
-\par Dalsim krokem je potreba dostat kontrolni registr do superpozice pomoci Hadamard hradel:
-$$|\phi_2\rangle = $$
-
-\subsection{Implementace}
-TODO
-
-\newpage
-
-
-\section{Zdroje}
+\section{Zdroje a odkazy}
 \color{blue}
 \fontsize{10pt}{0}
 \url{https://cs.wikipedia.org/wiki/RSA}
@@ -600,7 +821,8 @@ TODO
 \par\url{https://en.wikipedia.org/wiki/Quantum_logic_gate}
 \par\url{https://arxiv.org/pdf/quant-ph/9508027.pdf}
 \par\url{https://qiskit.org/}
-
+\par\url{https://github.com/DimaLeshchinskiy/QuantumEmulator}
 
 
 \end{document}
+
