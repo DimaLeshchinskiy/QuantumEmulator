@@ -17,6 +17,6 @@ circuit.addCNOT(2, 3)
 circuit.addGates([H, H, H, I])
 
 circuit.simulate()
-state = circuit.measureAll()
+state = circuit.measure()
 
 print(state)
