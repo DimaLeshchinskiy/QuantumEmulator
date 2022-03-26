@@ -11,6 +11,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{mathtools}
+\usepackage[hyphenbreaks]{breakurl}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
 \graphicspath{ {./images/} }
 
@@ -47,6 +48,12 @@ Implementovat algoritmus v nějakém simulátoru a použít ho na prolomení RSA
 \author{Dmitry Leshchinskiy}
 \date{\today}
 
+\makeatletter
+\let\mytitle\@title
+\let\myauthor\@author
+\let\mydate\@date
+\makeatother
+
 \begin{document}
 \maketitle
 \newpage
@@ -54,10 +61,36 @@ Implementovat algoritmus v nějakém simulátoru a použít ho na prolomení RSA
 \tableofcontents
 \newpage
 
+\section{Úvod}
+Cílem mé práce je vytvořit funkční simulátor kvantového počítače, na kterém bych zkusil implementovat Shorův algoritmus, který by se dal využít pro prolomeni RSA.
+\par Nejdřív popíšu, co je to RSA.
+V teto sekci vysvětlím, jak se dopočítávají klice pro šifrovaní a dešifrovaní a jak je využít pro zašifrovaní zprávy.
+\par V další kapitole popisu matematicky model kvantového počítače.
+Vysvětlím, co je to qubit a jak se značí.
+Na příkladech předvedu funkčnost některých kvantových hradel.
+\par Následující kapitola se zabývá popisem mé knihovny, kterou jsem vytvořil pravě pro účel seznámeni s kvantovými počítači.
+Obsahuje popis dostupných funkci pro tvorbu a simulaci kvantových algoritmu.
+\par Další kapitola primo navazuje na předchozí.
+Zde ukážu, jak lze pomoci mé knihovny vytvořit a simulovat kvantové obvody.
+\par Na závěr popisu Shorův algoritmus.
+Teoreticky popisu jeho funkčnost a předvedu kód pomoci, kterého se mi povedlo tento algoritmus nasimulovat.
+\newpage
+
+\section{Čestné prohlášení}
+Prohlašuji, že jsem předkládanou dlouhodobou maturitní práci vypracoval
+sám a uvedl jsem veškerou použitou literaturu a bibliografické citace.
+\\ \\ \\
+\par V Praze dne: \mydate \\
+\par \myauthor: \hrulefill
+\newpage
+
 \section{Úvod do RSA}
 \subsection{Co je to RSA?}
 
-RSA je asymetrická šifra s otevřeným klíčem.
+RSA je asymetrická šifra s otevřeným klíčem, která byla veřejně publikovaná v roce 1977.
+Stvořili ji 3 lidi: Ron Rivest, Adi Shamir a Leonard Adleman.
+Asymetrické šifry jsou ty, které pro šifrovaní a dešifrovaní využívají dvojici klíčů.
+Využívá jednosměrnou funkci, která znemožňuje použiti stejného klíče pro šifrovaní a dešifrovaní.
 Pro použiti teto šifry je potřeba si vypočítat otevřeny klíč, kterým se bude šifrovat zprava určena pro vás, a privátní klíč, kterým vy budete šifru dešifrovat.
 K aktuálnímu dni se tato šifra povazuje za bezpečnou.
 
@@ -65,31 +98,32 @@ K aktuálnímu dni se tato šifra povazuje za bezpečnou.
 Když budu chtít někomu poslat zakódovanou zprávu pomoci RSA, potřebuji si od adresáta dostat jeho veřejný klíč.
 Tímto klíčem si zakóduji zprávu a odešlu.
 Příjemce až zprávu dostane, dešifruje ji pomoci svého privátního klíče.
-\par Bezpečnost RSA je postavena na předpokladu, že je dost náročné faktorizovat číslo.
+\par Bezpečnost RSA je postavena na předpokladu, že je výpočetně dost náročné faktorizovat číslo.
 Faktorizovat číslo znamená rozložit jej na součin prvočísel.
 
 \subsection{Výpočet klíčů teorie}
 Nejdřív se vybírá dvojice prvočísel: $p, q$.
 Následně si vypočítá jejich násobek. Označíme ho za $N$.
-Dále si nadefinujeme $\phi (N)$ jako $(p - 1) * (q - 1)$.
-\par V následujícím kroku se musí vybrat číslo $e$, pro které platí, že je nesoudělné s $\phi (N)$.
+Dále si nadefinujeme $\varphi (N)$ jako $(p - 1) \cdot (q - 1)$.
+\par V následujícím kroku se musí vybrat číslo $e$, pro které platí, že je nesoudělné s $\varphi (N)$.
 Pro nalezeni $e$ lze využít rozšířeny Euklidův algoritmus.
 Z praktického hlediska se číslo $e$ vybírá tak, aby obsahovalo malý počet bitu rovných $1$.
 To je z důvodu rychlejšího šifrovaní, které se provádí pomoci umocňovaní.
-Posledním krokem je určit číslo $d$. Pro d platí:
-$$ ed \bmod \phi (N) = 1 $$
+Posledním krokem je určit číslo $d$, což lze v praxi nalézt rozšířeným Euklidovým algoritmem.
+Pro d platí:
+$$ ed \bmod \varphi (N) = 1 $$
 Veřejný klíč je pak dvojice: $e, N$ \\
 Privátní klíč je pak dvojice: $d, N$
 
 \subsection{Výpočet klíčů ukázka}
 \noindent Zvolíme si nejprve $p, q$:
 $$p = 83, q = 89$$
-Spočítám $N, \phi (N)$:
-$$N = pq = 83 * 89 = 7387$$
-$$\phi (N) = (p - 1)(q - 1) = 82 * 88 = 7216$$
+Spočítám $N, \varphi (N)$:
+$$N = pq = 83 \cdot 89 = 7387$$
+$$\varphi (N) = (p - 1)(q - 1) = 82 \cdot 88 = 7216$$
 Získám $e, d$:
-$$e = 3 \because gcd(e, \phi (N)) = 1$$
-$$d = 4811 \because ed \bmod \phi (N) = 1$$
+$$e = 3 \because gcd(e, \varphi (N)) = 1$$
+$$d = 4811 \because ed \bmod \varphi (N) = 1$$
 Poskládám klíče:
 Public: $(3, 7387)$
 Private: $(4811, 7387)$
@@ -102,24 +136,28 @@ $$c = m^e \bmod N$$
 \par Proto abychom mohli zprávy dešifrovat, potrénujeme privátní klíč.
 Pak se zprava $c$ dešifruje pomoci privátního klíče $(d, N)$ do $m$ následně:
 $$m = c^d \bmod N$$
-\par Všimneme si, že může docházet k umocnění velkou exponentou.
+\par Všimneme si, že může docházet k umocnění velkým exponentem.
 Tento výpočet by mohl trvat dost dlouho a zároveň by se spotřebovalo víc paměti pro velká čísla.
 Proto v praxi se využívá úspornější metoda, která využívá rovnost:
 $$(a * b) \bmod N = ((a \bmod N)(b \bmod N)) \bmod N$$
 Tedy můžeme modulit po každém násobeni.
 Však počet iteraci násobeni bude roven hodnotě exponentu.
 Pro jejich zmenšeni lze využít binární umocňovaní.
+Během teto metody umocňovaní, procházíme pobitově exponent od nejvyššího bitu.
+Když je bit roven 0, pak umocníme druhou mocninou poslední mezi výsledek.
+Jestliže je bit roven 1, pak umocníme druhou mocninou poslední mezi výsledek a vynásobíme původním základem.
+Víc o teto metodě zde: [\url{https://en.wikipedia.org/wiki/Exponentiation_by_squaring}].
 
 \subsection{Prolomeni RSA}
 Jak již bylo zmíněno, RSA se povazuje za bezpečnou šifru.
 Na venek je přístupna jen zašifrovaná zprava $c$ a veřejný klíč $(e, N)$, kterým byla zprava zašifrovaná.
 
 \par Pro dešifrovaní potřebujme privátní klíč $(d, N)$.
-Pro výpočet $d$ potřebujeme si dopočítat $\phi (N)$, který se počítá z $p$ a $q$.
+Pro výpočet $d$ potřebujeme si dopočítat $\varphi (N)$, který se počítá z $p$ a $q$.
 Naštěstí nebo k neštěstí, záleží na pohledu, známe $N$, což je součin $p$ a $q$.
 Takže potřebujeme jen rozložit $N$ na součin dvou prvočísel neboli faktorizovat.
 
-\par Zatím neexistuje žádný algoritmus pro faktorizaci, který by běžel na klasickém počítací za polynomiální čas.
+\par Zatím neexistuje žádný algoritmus pro faktorizaci, který by běžel na klasickém počítací v polynomiálním čase.
 Avšak v roce 1994 se podařilo P. Shorovi, americkému profesorovi matematiky v MIT, vymyslet algoritmus, který by běžel částečné na kvantovém počítací, a výsledkem je rozložené číslo na součin prvočísel.
 Ten algoritmus si pojmenoval jako Shorův algoritmus.[\url{https://arxiv.org/pdf/quant-ph/9508027.pdf}]
 
@@ -133,12 +171,14 @@ Zatím co klasicky počítač operuje s bity, kvantový počítač operuje s qub
 Jednotlivým skupinám qubitu se říká registr.
 
 \subsection{Co je to Qubit?}
-Klasicky bit v počítací může nabývat hodnot ${0, 1}$. Qubit může byt $0$, $1$ nebo kombinaci obou. Da se zapsat jako vektor:
+Klasicky bit v počítací může nabývat hodnot ${0, 1}$.
+Qubit může byt $0$, $1$ nebo kombinaci obou.
+Matematicky ho modelujeme jako dvourozměrný komplexní vektor:
 $$|q\rangle = \alpha|0\rangle + \beta|1\rangle$$
-\par kde $\alpha$ a $\beta$ jsou koeficienty, které určují pravděpodobnost změřeni qubitu ve stavu $0$ nebo $1$.
+\par kde $\alpha,\beta\in\mathbb{C}$ jsou koeficienty, které určují pravděpodobnost změřeni qubitu ve stavu $0$ nebo $1$.
 Součet druhých mocnin koeficientu se musí rovnat $1$:
 $$\alpha^2 + \beta^2 = 1$$
-\par Zápis $|0\rangle$ a $|1\rangle$ není nic jiného, než jenom zkráceny zápis vektoru.
+\par Zápis $|0\rangle$ a $|1\rangle$ není nic jiného než jenom zkráceny zápis vektoru.
 Můžeme je rozepsat takto:
 $$|0\rangle = \begin{bmatrix}
         1 \\
@@ -153,7 +193,12 @@ $$|q\rangle = \begin{bmatrix}
         \beta
     \end{bmatrix}$$
 
-\par Ukážeme si, jak matematicky funguje měřeni.
+\par Kvantový počítač by byl k ničemu, pokud by neslo získat výsledek z výpočtu.
+Za výsledek se povazuje jeden konkrétní stav kvantového počítače z množiny možných stavu pro konkrétní algoritmus.
+Pro některé stavy je pravděpodobnost výskytu větší než u jiných.
+Abychom dostali výsledek z reálného kvantového počítače, se používá měřeni.
+Podstatnou vlastnosti měřeni je, ze qubity ze stavu superpozice se dostanou do stavu $|0\rangle$ nebo $|1\rangle$.
+Ukážeme si, jak matematicky funguje měřeni.
 Proto abychom zjistili pravděpodobnost pro konkrétní stav, nám stačí umocnit na druhou násobek transponovaného vektoru hledaného stavu a vektor $|q\rangle$:
 $$|\langle 0 | q \rangle|^2 = \abs*{\begin{bmatrix}
             1 & 0
@@ -169,13 +214,26 @@ $$|\langle 1 | q \rangle|^2 = \abs*{\begin{bmatrix}
             \beta
         \end{bmatrix}}^2 = \beta ^ 2$$
 
+\subsection{Blochová koule}
+Blochová koule se často využívá pro vizualizaci jednoho qubitu.
+Qubit je reprezentován libovolným bodem na kouli.
+Severní pól koule odpovídá stavu $|0\rangle$, zatímco jižní pól odpovídá stavu $|1\rangle$.
+\sloppy
+Vizualizace může vypadat takhle [obrázek z \url{https://qubits.cz/serialy/kvantovy-serial-dil-2-kvantove-pocitace-qubit/}]:
+\begin{figure}[H]
+    \includegraphics[scale=0.25]{Bloch_sphere}
+    \centering
+\end{figure}
 
+\par Drive jsem definoval stav qubitu pomoci $\alpha$ a $\beta$.
+Lze taky definovat stav qubitu pomoci dvou uhlu $\varphi$ a $\theta$:
+$$|q\rangle = \cos{\frac{\theta}{2}}|0\rangle + e^{i\varphi}\sin{\frac{\theta}{2}}|1\rangle $$
 
 \subsection{Registr Qubitu}
 Ve výpočtech většinou nebudeme pracovat s jedným qubitem ale s celým registrem qubitu. Zkráceny zápis by vypadal takto:
 $$|001\rangle$$
 \par To znamená, že mam 3 qubity, první 2 jsou nastavené na 0, poslední je nastaven na 1.
-Když budeme chtít si to představit jako vektor, stačí získat kronekeruv součin:
+Registr o $n$ bitech se matematicky modeluje jako $2^n$-rozměrný vektor, kombinace jednotlivých qubitů do celého registru lze formálně provést operací Kroneckerova součinu, například takto:
 $$|q\rangle = |001\rangle = |0\rangle \otimes |0\rangle \otimes |1\rangle = \begin{bmatrix}
         0 \\
         1 \\
@@ -193,14 +251,14 @@ $$|\langle 011|q\rangle|^2 = 0$$
 \subsection{Kvantové hradlo}
 V booleve algebře máme logická hradla typu OR, AND, XOR.
 To jsou hradla, které dostávají vstup bitu a produkuji vystup.
-Kvantové počítače operuji s něčím podobným.
+Základní operace s kvantovými registry můžeme provádět jistou analogií – kvantovými hradly.
 Největší rozdíl je v tom, že kvantová hradla provádí jenom reverzibilní operace.
-Všechna kvantova hradla jsou reverzibilní.
-To znamená, že kdybychom aplikovali dvě hradla za sebou, budeme mít na výstupu druhého hradla přesně to, co jsme měli na vstupu prvního hradla.
+Všechna kvantová hradla jsou reverzibilní.
+To znamená, že ke každému hradlu existuje jeho inverzní hradlo, které když aplikujeme po sobě tak celý obvod bude zachovávat stav registru.
 \par Každý hradlo je matematicky definováno čtvercovou matici o rozměrech $2^n \times 2^n$, kde $n$ je počet qubitu.
 Pro aplikovaní hradla je potřeba vynásobit mezi sebou matici hradla a vektor stavu $|q\rangle$.
 \par Základní kvantové hradlo je \textbf{I} jako identita.
-Přesněji řečeno neděla nic ale i tak bude potřeba pro některé výpočty.
+Přesněji řečeno nemění stav vektoru a výstupní qubit se tedy vždy rovná vstupnímu. I tak bude potřeba pro některé výpočty.
 Její matice vypadá takto:
 $$I = \begin{bmatrix}
         1 & 0 \\
@@ -214,7 +272,7 @@ $$X = \begin{bmatrix}
         0 & 1 \\
         1 & 0
     \end{bmatrix}$$
-\par Jako důkaz, že se jedna o hradlo reverzibilní, mužem zkusit je poskládat za sebou a podívat se co nám vyjde.
+\par Jako důkaz, že se jedná o hradlo reverzibilní, mužem zkusit je poskládat za sebou a podívat se co nám vyjde.
 To znamená, ze jejich matice vynásobíme mezi sebou:
 $$XX = \begin{bmatrix}
         0 & 1 \\
@@ -307,6 +365,16 @@ $$CNOT|11\rangle = \begin{bmatrix}
         0
     \end{bmatrix} = |10\rangle$$
 
+\begin{figure}[H]
+    \includegraphics[scale=1]{cnot_example_1}
+    \centering
+\end{figure}
+
+\begin{figure}[H]
+    \includegraphics[scale=1]{cnot_example_2}
+    \centering
+\end{figure}
+
 \par Je možné poskládat matici pro libovolné kontrolní hradlo. Ukážu to na přikladu CNOTu.
 $$CNOT = |1 \rangle\langle 1| \otimes X + |0 \rangle\langle 0| \otimes I$$
 $$CNOT = \begin{bmatrix}
@@ -343,12 +411,34 @@ $$CNOT = \begin{bmatrix}
         0 & 0 & 1 & 0
     \end{bmatrix}$$
 
+\par Stejně jako každý logický obvod lze složit z hradel AND a NOT, lze každý kvantový obvod libovolně aproximovat pouze pomocí hradel CNOT a Hadamard.
+\par Zajímavým hradlem je Toffoli gate.
+Může se značit jako CCNOT.
+Má totiž 2 kontrolní qubity a 1 cílový.
+Zde dochází k invertovaní cílového qubitu v případě ze oba kontrolní jsou ve stavu 1:
+
+$$\begin{bmatrix}
+        1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+        0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+    \end{bmatrix}$$
+
+\begin{figure}[H]
+    \includegraphics[scale=.7]{toffoli_scheme}
+    \centering
+\end{figure}
+
 \subsection{Vzájemně spoutané qubity – Bellmanuv Stav}
 Myslím si, že je dost jasné, jak se budou chovat 2 qubity po CNOTu.
 Control qubit zůstane stejný ale druhy(target) qubit se změní, pokud je první ve stavu 1.
 Co se však stane, když controlni qubit bude v superpozici? Pojďme si to spočítat.
 Budeme mít tenhle počáteční stav:
-$$|\phi_1 \rangle = |00\rangle = \begin{bmatrix}
+$$|\varphi_1 \rangle = |00\rangle = \begin{bmatrix}
         1 \\
         0 \\
         0 \\
@@ -356,7 +446,7 @@ $$|\phi_1 \rangle = |00\rangle = \begin{bmatrix}
     \end{bmatrix}$$
 \par Proto abychom dostali stav superpozice, potřebujeme ventil Hadamarda.
 V našem případě bude první qubit kontrolní, takže potřebujeme aplikovat Hadamarda na první qubit:
-$$|\phi_2 \rangle = (H \otimes I) |\phi_1 \rangle = \frac{1}{\sqrt{2}} \begin{bmatrix}
+$$|\varphi_2 \rangle = (H \otimes I) |\varphi_1 \rangle = \frac{1}{\sqrt{2}} \begin{bmatrix}
         1 & 0 & 1  & 0  \\
         0 & 1 & 0  & 1  \\
         1 & 0 & -1 & 0  \\
@@ -374,7 +464,7 @@ $$|\phi_2 \rangle = (H \otimes I) |\phi_1 \rangle = \frac{1}{\sqrt{2}} \begin{bm
     \end{bmatrix}$$
 \par Tento stav nám říká, ze je možný po změřeni dostat bud $|00\rangle$ nebo $|10\rangle$ s $\frac{1}{2}$ pravděpodobnosti.
 Následně pojďme aplikovat CNOT:
-$$|\phi_3 \rangle = CNOT |\phi_2 \rangle = \frac{1}{\sqrt{2}} \begin{bmatrix}
+$$|\varphi_3 \rangle = CNOT |\varphi_2 \rangle = \frac{1}{\sqrt{2}} \begin{bmatrix}
         1 & 0 & 0 & 0 \\
         0 & 1 & 0 & 0 \\
         0 & 0 & 0 & 1 \\
@@ -393,6 +483,11 @@ $$|\phi_3 \rangle = CNOT |\phi_2 \rangle = \frac{1}{\sqrt{2}} \begin{bmatrix}
 \par Tímto jsme dostali Bellův stav, při němž jsou 2 qubity společně spoutány.
 Ted když provedeme měřeni, dostaneme bud $|00\rangle$ nebo $|11\rangle$ s $\frac{1}{2}$ pravděpodobnosti.
 Tento stav se používá u algoritmu kvantové teleportace.
+Schema:
+\begin{figure}[H]
+    \includegraphics[scale=.7]{bell_state_scheme}
+    \centering
+\end{figure}
 
 \subsection{Phase kick-back}
 \label{sec:phase_kickback}
@@ -432,18 +527,85 @@ $$CNOT |1-\rangle = |1\rangle \left(X \left(\frac{|0\rangle - |1\rangle}{\sqrt{2
 $$= -|1\rangle \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$
 \par Obecně platí:
 $$CNOT |b-\rangle = (-1)^b|b\rangle\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$:
-\par Je vidět, že jsme dokázali změnit fázi kontrolního qubitu, když kontrolní qubit je v superpozici:
+\par Zde je vidět, že jsme dokázali změnit fázi kontrolního qubitu, když kontrolní qubit je v superpozici:
 $$CNOT\left((\alpha|0\rangle + \beta|1\rangle)\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\right) = (\alpha|0\rangle - \beta|1\rangle)\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$
+
+\subsection{QFT a inverzní QFT}
+\label{sec:qft}
+Informace pro tuto kapitolu jsem čerpal hlavně z učebnice \url{http://mmrc.amss.cas.cn/tlb/201702/W020170224608149125645.pdf}.
+\par Hadamard hradlo má ještě jednu vlastnost: můžeme pomoci nej zakódovat informaci do fáze qubitu a také ji dekódovat.
+Jednoduchý příklad zakódovaní($x\in\{0,1\}$):
+$$H|x\rangle = \frac{1}{\sqrt{2}}|0\rangle + \frac{(-1)^x}{\sqrt{2}}|1\rangle = \frac{1}{\sqrt{2}}\displaystyle\sum_{y\in\{0, 1\}} (-1)^{xy}|y\rangle$$
+\par Pro dekódovaní aplikujme zase Hadamarda:
+$$H\left(\frac{1}{\sqrt{2}}|0\rangle + \frac{(-1)^x}{\sqrt{2}}|1\rangle\right) = |x\rangle$$
+\par Obecně fázi můžeme zapsat jako komplexní číslo $e^{2\pi i w}$, kde $w\in(0, 1)$ a je reálné.
+Můžeme si představit $w$ jako k-bitové binární číslo $w=0.x_1x_2x_3...x_k$, to znamená $w = x_1 \cdot 2^{-1} + x_2 \cdot 2^{-2} + x_3 \cdot 2^{-3} + ... + x_k \cdot 2^{-k}$.
+Pro příklad si představíme, že máme jeden qubit, pro které platí, že $w=0.x_1$.
+Pak:
+$$
+    \frac{1}{\sqrt{2}}\displaystyle\sum_{y\in\{0, 1\}} e^{2\pi i (0.x_1) y}|y\rangle =
+    \frac{1}{\sqrt{2}}\displaystyle\sum_{y\in\{0, 1\}} e^{2\pi i (\frac{x_1}{2}) y}|y\rangle =
+    \frac{1}{\sqrt{2}}\displaystyle\sum_{y\in\{0, 1\}} (-1)^{xy}|y\rangle
+$$
+\par Tento stav můžeme dekódovat pomoci hradla Hadamarda, a tím získáme $w$.
+Co když se bude $w$ skládat z $n$ bitu po desetinné čárce?
+Můžeme tento komplikovaný stav rozepsat dle rovnice 7.1.18 z učebnice.
+V našem případě $w=0.x_1x_2$ a $n=2$:
+
+$$
+    \frac{1}{\sqrt{2^2}}\displaystyle\sum_{y=0}^{2^2 - 1} e^{2\pi i (0.x_1x_2) y}|y\rangle =
+    \left(\frac{|0\rangle + e^{2\pi i (0.x_2)}|1\rangle}{\sqrt{2}}\right) \otimes
+    \left(\frac{|0\rangle + e^{2\pi i (0.x_1x_2)}|1\rangle}{\sqrt{2}}\right)
+$$
+
+\par Všimneme se, že pro získaní $x_2$ stačí aplikovat Hadamrda na první qubit.
+Dostat $x_1$ bude o něco složitější.
+Proto si nadefinuji hradlo $R_k$, které mění fázi qubitu:
+$$
+    \begin{bmatrix}
+        1 & 0                       \\
+        0 & e^{\frac{2 \pi i}{2^k}}
+    \end{bmatrix}
+$$
+inverzní hradlo $R_k^{-1}$ je:
+$$
+    \begin{bmatrix}
+        1 & 0                        \\
+        0 & e^{-\frac{2 \pi i}{2^k}}
+    \end{bmatrix}
+$$
+\par Když je $x_2 = 1$ a hradlo $R_2^{-1}$ aplikuju na druhy qubit, dostanu následující:
+$$
+    R_2^{-1}\left(\frac{|0\rangle + e^{2\pi i (0.x_1 1)}|1\rangle}{\sqrt{2}}\right) =
+    \frac{|0\rangle + e^{2\pi i (0.x_1 1 - 0.01)}|1\rangle}{\sqrt{2}} =
+    \frac{|0\rangle + e^{2\pi i (0.x_1)}|1\rangle}{\sqrt{2}}
+$$
+\par Ted už jen zbývá aplikovat Hadamarda pro získaní $x_1$.
+Všimneme si, že je potřeba aplikovat $R_k^{-1}$ pouze když je $x_{k + 1} = 1$.
+Takže je z toho potřeba vyrobit Controlled gate.
+Schéma pro 2 qubity by vypadala takto
+    [obrázek 7.1 z učebnice]:
+\begin{figure}[H]
+    \includegraphics[scale=.6]{phase_estimation}
+    \centering
+\end{figure}
+\par Tento proces se da zapsat jako:
+$$\frac{1}{\sqrt{2^n}}\displaystyle\sum_{y=0}^{2^n - 1} e^{2\pi i \frac{x}{2^n} y}|y\rangle \to |x\rangle$$
+\par Obraceny proces se označuje jako $QFT$(Quantum Fourier Transform):
+$$QFT:|x\rangle \to \frac{1}{\sqrt{2^n}}\displaystyle\sum_{y=0}^{2^n - 1} e^{2\pi i \frac{x}{2^n} y}|y\rangle$$
+\par Potom $QFT^{-1}$ se zapisuje:
+$$QFT^{-1}:|x\rangle \to \frac{1}{\sqrt{2^n}}\displaystyle\sum_{y=0}^{2^n - 1} e^{-2\pi i \frac{x}{2^n} y}|y\rangle$$
+
 \newpage
 
 \section{QuantumEmulator – vlastni kvantový simulátor}
 \label{sec:QuantumEmulator}
 \subsection{Úvod}
-QuantumEmulator – je moje vlastní Python knihovna, která mi pomáhala ve zkoumaní funkčnosti kvantového počítače.
+QuantumEmulator – je moje vlastní Python knihovna, při jejíž implementaci jsem měl možnost do hloubky pochopit matematický model kvantových výpočtů.
 Nabízí funkce pro tvorbu kvantových algoritmu libovolné složitosti.
 \par Jelikož simulace kvantového počítače je hodně o počítaní s maticemi, vybral jsem si knihovnu Numpy, která zjednodušuje prací s maticemi a celkově s výpočty.
 Numpy využívá funkce psané v jazyce C, a proto jsou výpočty optimalizované a rychlé.
-\par Projekt je pod licenzi MIT a lze ho najit na mem githubu zde: \url{https://github.com/DimaLeshchinskiy/QuantumEmulator}
+\par Projekt je pod licenci MIT a lze ho najit na mem githubu zde: \url{https://github.com/DimaLeshchinskiy/QuantumEmulator}
 
 \subsection{QConstants}
 Tento soubor obsahuje předem definované matice pro nejpoužívanější hradla a taky konstanty.
@@ -609,7 +771,7 @@ print("#EXAMPLE 5", state) # in this case output will be always [1, 1, 0]
 
 \subsection{Swap hradlo}
 Tenhle kód ukazuje, jak lze vytvořit Swap hradlo.
-\begin{lstlisting}[language=Python, caption=Toffoli gate]
+\begin{lstlisting}[language=Python, caption=Swap gate]
 from qsim.qcircuit import QCircuit
 from qsim.qconstants import H, I
 circuit = QCircuit()
@@ -631,50 +793,65 @@ print("#EXAMPLE 6", state)
 
 \section{Shorův algoritmus}
 \subsection{Úvod}
-Profesor matematiky, P. Shor, přisel na to, jak rozložit číslo na součin dvou prvočísel za logaritmicky čas.
+Profesor matematiky, P. Shor, přisel na to, jak rozložit K-bitové číslo na součin dvou prvočísel.
+K tomu je potřeba přibližně $72K^3$ qubitu.
+\url{https://journals.aps.org/pra/abstract/10.1103/PhysRevA.54.1034}
 Avšak jeho algoritmus vyžaduje použít kvantové výpočty. Zjistil, že pro rozloženi čísla,
 je potřeba najit periodu funkce $f(x) = a^x \bmod N$, kde $a, N, r \in \mathbb{N}$.
 Pro a platí $a < N$ a zároveň $gcd(a, N) = 1$.
 Perioda $r$ je pak nejmenší možné číslo, pro které platí:
 $$a^r \bmod N = 1$$
-\par Proměna $a$ se vybere náhodně z rozsahu $1 < a < N$.
+\par Proměnná $a$ se vybere náhodně z rozsahu $1 < a < N$.
 Když $gcd(a, N) \ne 1$, pak jedním ze součinitelů čísla $N$ je jejich nevětší společný dělitel.
 Druhy lze nalézt pomoci děleni. Jinak se musí hledat perioda.
 \par Problém nalezeni periody, je velice známy ve světě kvantových algoritmu. Tento algoritmus popisu v další sekci.
-\par Když periodu najdeme, zbývá jen dopočítat činitele čísla $N$ za pomocí Euklidova algoritmu pro nalezeni největšího společného dělitele:
+\par Když periodu najdeme, zbývá jen dopočítat činitele čísla $N$ za pomocí Euklidova algoritmu pro nalezeni největšího společného dělitele.
+Jelikož:
+$$a^r \bmod N = 1$$
+proto:
+$$(a^r - 1) \bmod N = 0$$
+když je $r$ sude, použijme vzorec pro rozdíl druhých mocnin:
+$$a^r - 1 = (a^\frac{r}{2} + 1)(a^\frac{r}{2} - 1)$$
 $$p, q = gcd(a^\frac{r}{2} \pm 1, N)$$
 
 \subsection{Nalezeni periody funkce}
-Pro nalezeni periody se využívá Quantum Phase Estimation algoritmus. Jeho schéma:
+Pro nalezeni periody se využívá Quantum Phase Estimation algoritmus.
+Jeho schéma:
+\sloppy
+\url{https://www.researchgate.net/publication/228102587_Fast_Quantum_Modular_Exponentiation_Architecture_for_Shor's_Factorization_Algorithm}
 \begin{figure}[H]
     \includegraphics[scale=.5]{High-level-diagram-of-Shors-algorithm-Upper-register-consists-of-2n-qubits-and-holds}
     \centering
 \end{figure}
 \par Je potřeba si vytvořit dva registry. První registr pojmenuji jako kontrolní. Druhy jako cílový.
-Na velikost kontrolního registru záleží to, jak moc bude velká úspěšnost dostat správný výsledek a také jak moc přesne výpočty budou.
+Na velikost kontrolního registru záleží to, jak moc bude velká úspěšnost dostat správný výsledek a také jak moc přesné výpočty budou.
 Velikost cílového registru zvolíme jako $n = log_2(N)$.
 Pak velikost $2n$ bude dostačující pro kontrolní registr.
 \par Všechny qubity z kontrolního registru dáme do stavu $0$. Všechny qubity z cílového registru dáme do stavu $0$ až na poslední qubit. Ten bude ve stavu 1.
 Označím je jako velké $|\textbf{0}\rangle$ a velké $|\textbf{1}\rangle$
 Takže po inicializaci bude stav kvantového počítače:
-$$|\phi_1\rangle = |\textbf{0}\rangle\otimes|\textbf{1}\rangle$$
+$$|\varphi_1\rangle = |\textbf{0}\rangle\otimes|\textbf{1}\rangle$$
 \par Dalším krokem je potřeba dostat kontrolní registr do superpozice pomoci Hadamard hradel:
-$$|\phi_2\rangle = (H^{\otimes 2n}\otimes I^{\otimes n})(|\textbf{0}\rangle\otimes|\textbf{1}\rangle)$$
+$$|\varphi_2\rangle = (H^{\otimes 2n}\otimes I^{\otimes n})(|\textbf{0}\rangle\otimes|\textbf{1}\rangle)$$
 \par Ted je potřeba říct, co je Uf. Toto hradlo aplikuje funkci $f(x)$ na cílový registr.
 Tim, ze je kontrolní registr v superpozici, dochází k \hyperref[sec:phase_kickback]{phase kick-back} jevu.
 Proto zároveň při aplikaci Uf se zakóduje do fázi qubitu z kontrolního registru potřebná informace.
 $$Uf|x\rangle|y\rangle = |x\rangle|y*f(x)\rangle = |x\rangle|ya^x \bmod N \rangle$$
 \par Posledním krokem je $QFT^{-1}$.
-To je potřeba pro transformaci informace z fázi kontrolních qubitu.
+Jedna se o inverzní hradlo k hradlu \hyperref[sec:qft]{QFT}.
+QFT provádí dekretní Fourierovou transformaci.
+\url{https://en.wikipedia.org/wiki/Quantum_Fourier_transform}
+$QFT^{-1}$ je potřeba pro transformaci informace z fázi kontrolních qubitu.
 Ve výsledku, když změříme kontrolní registr, dostaneme číslo $x_1$.
 Ted je potřeba pomoci continued fraction algoritmu, najit nejbližší zlomek ke zlomku $\frac{x_1}{2^{2n}}$, který nebude mít jmenovatel větší než $N$.
 Pravě jmenovatel nalezeného zlomku je hledané $r$.
 \par Tento algoritmus nemusí vždy dopočítat $r$ správně.
-Proto je potřeba spustit tento algoritmus vice krát.
+Proto je potřeba v praxi spustit tento algoritmus vice krát.
+V našem případě použijme funkci z mé knihovny pro zisk všech kvantových stavu najednou, a proto nebude potřeba pouštět algoritmus vícekrát.
 
 \subsection{Implementace}
 Pro implementaci jsem využil svůj \hyperref[sec:QuantumEmulator]{kvantový simulátor}.
-Kompletní kód lze najit na githubu v souboru shor\_example.py.
+Kód lze najit na githubu v souboru shor\_example.py.
 \begin{lstlisting}[language=Python, caption=Shor algorithm]
 from fractions import Fraction
 from math import ceil
@@ -813,6 +990,19 @@ print("Factors are: ", Factorization(15))
 
 \newpage
 
+\section{Zaver}
+Prvním cílem bylo naprogramovat vlastni kvantový simulátor. Povedlo se mi vytvořit funkční knihovnu pro tvorbu a simulaci kvantových algoritmu.
+Jsem schopen tvořit algoritmy libovolné složitosti.
+Jedině jsem limitován operační paměti obyčejného počítače.
+Během programovaní, jsem musel pochopit matematiku, kterou se popisuji kvantové algoritmy.
+Ne všechny potřebné obory matematiky se probírají na střední škole,
+proto nebylo jednoduché pochopit části algoritmu, kde se využívá vysokoškolská matematika.
+\par Druhým cílem bylo zkusit rozložit číslo na součin dvou prvočísel pomoci algoritmu Shora a následně postup popsat.
+To se mi taky povedlo.
+Největší číslo, které jsem schopen rozložit je 15.
+\par Moje práce může sloužit jako výukový materiál pro studenty, které chtějí porozumět kvantovým počítačům.
+\newpage
+
 \section{Zdroje a odkazy}
 \color{blue}
 \fontsize{10pt}{0}
@@ -821,8 +1011,8 @@ print("Factors are: ", Factorization(15))
 \par\url{https://en.wikipedia.org/wiki/Quantum_logic_gate}
 \par\url{https://arxiv.org/pdf/quant-ph/9508027.pdf}
 \par\url{https://qiskit.org/}
+\par\url{http://mmrc.amss.cas.cn/tlb/201702/W020170224608149125645.pdf}
+\par\url{https://en.wikipedia.org/wiki/Exponentiation_by_squaring}
 \par\url{https://github.com/DimaLeshchinskiy/QuantumEmulator}
 
-
 \end{document}
-
