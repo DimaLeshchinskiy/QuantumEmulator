@@ -62,18 +62,17 @@ Implementovat algoritmus v nějakém simulátoru a použít ho na prolomení RSA
 \newpage
 
 \section{Úvod}
-Cílem mé práce je vytvořit funkční simulátor kvantového počítače, na kterém bych zkusil implementovat Shorův algoritmus, který by se dal využít pro prolomeni RSA.
+Cílem mé práce je vytvořit funkční simulátor kvantového počítače, na kterém bych zkusil implementovat Shorův algoritmus, který by se dal využít pro prolomení RSA.
 \par Nejdřív popíšu, co je to RSA.
 V teto sekci vysvětlím, jak se dopočítávají klice pro šifrovaní a dešifrovaní a jak je využít pro zašifrovaní zprávy.
-\par V další kapitole popisu matematicky model kvantového počítače.
+\par V další kapitole popisu matematický model kvantového počítače.
 Vysvětlím, co je to qubit a jak se značí.
 Na příkladech předvedu funkčnost některých kvantových hradel.
 \par Následující kapitola se zabývá popisem mé knihovny, kterou jsem vytvořil pravě pro účel seznámeni s kvantovými počítači.
 Obsahuje popis dostupných funkci pro tvorbu a simulaci kvantových algoritmu.
 \par Další kapitola primo navazuje na předchozí.
 Zde ukážu, jak lze pomoci mé knihovny vytvořit a simulovat kvantové obvody.
-\par Na závěr popisu Shorův algoritmus.
-Teoreticky popisu jeho funkčnost a předvedu kód pomoci, kterého se mi povedlo tento algoritmus nasimulovat.
+\par Na závěr teoreticky popisu Shorův algoritmus a předvedu kód pomoci, kterého se mi povedlo tento algoritmus nasimulovat.
 \newpage
 
 \section{Čestné prohlášení}
@@ -145,8 +144,7 @@ Však počet iteraci násobeni bude roven hodnotě exponentu.
 Pro jejich zmenšeni lze využít binární umocňovaní.
 Během teto metody umocňovaní, procházíme pobitově exponent od nejvyššího bitu.
 Když je bit roven 0, pak umocníme druhou mocninou poslední mezi výsledek.
-Jestliže je bit roven 1, pak umocníme druhou mocninou poslední mezi výsledek a vynásobíme původním základem.
-Víc o teto metodě zde: [\url{https://en.wikipedia.org/wiki/Exponentiation_by_squaring}].
+Jestliže je bit roven 1, pak umocníme druhou mocninou poslední mezi výsledek a vynásobíme původním základem\footnote{\url{https://en.wikipedia.org/wiki/Exponentiation_by_squaring}}.
 
 \subsection{Prolomeni RSA}
 Jak již bylo zmíněno, RSA se povazuje za bezpečnou šifru.
@@ -159,7 +157,7 @@ Takže potřebujeme jen rozložit $N$ na součin dvou prvočísel neboli faktori
 
 \par Zatím neexistuje žádný algoritmus pro faktorizaci, který by běžel na klasickém počítací v polynomiálním čase.
 Avšak v roce 1994 se podařilo P. Shorovi, americkému profesorovi matematiky v MIT, vymyslet algoritmus, který by běžel částečné na kvantovém počítací, a výsledkem je rozložené číslo na součin prvočísel.
-Ten algoritmus si pojmenoval jako Shorův algoritmus.[\url{https://arxiv.org/pdf/quant-ph/9508027.pdf}]
+Ten algoritmus si pojmenoval jako Shorův algoritmus\footnote{\url{https://arxiv.org/pdf/quant-ph/9508027.pdf}}.
 
 \newpage
 
@@ -214,12 +212,12 @@ $$|\langle 1 | q \rangle|^2 = \abs*{\begin{bmatrix}
             \beta
         \end{bmatrix}}^2 = \beta ^ 2$$
 
-\subsection{Blochová koule}
-Blochová koule se často využívá pro vizualizaci jednoho qubitu.
+\subsection{Blochova koule}
+Blochova koule se často využívá pro vizualizaci jednoho qubitu.
 Qubit je reprezentován libovolným bodem na kouli.
 Severní pól koule odpovídá stavu $|0\rangle$, zatímco jižní pól odpovídá stavu $|1\rangle$.
 \sloppy
-Vizualizace může vypadat takhle [obrázek z \url{https://qubits.cz/serialy/kvantovy-serial-dil-2-kvantove-pocitace-qubit/}]:
+Vizualizace může vypadat takhle\footnote{\url{https://qubits.cz/serialy/kvantovy-serial-dil-2-kvantove-pocitace-qubit/}}:
 \begin{figure}[H]
     \includegraphics[scale=0.25]{Bloch_sphere}
     \centering
@@ -503,19 +501,25 @@ $$X|+\rangle = \frac{1}{\sqrt{2}}\begin{bmatrix}
         1
     \end{bmatrix} $$
 
-$$X|-\rangle = \frac{1}{\sqrt{2}}\begin{bmatrix}
-        0 & 1 \\
-        1 & 0
-    \end{bmatrix} \begin{bmatrix}
-        1 \\
-        -1
-    \end{bmatrix} = \frac{1}{\sqrt{2}} \begin{bmatrix}
-        -1 \\
-        1
-    \end{bmatrix} = -\frac{1}{\sqrt{2}} \begin{bmatrix}
-        1 \\
-        -1
-    \end{bmatrix} $$
+\begin{equation*}
+    \begin{split}
+        X|-\rangle & = \frac{1}{\sqrt{2}}\begin{bmatrix}
+            0 & 1 \\
+            1 & 0
+        \end{bmatrix} \begin{bmatrix}
+            1 \\
+            -1
+        \end{bmatrix} \\
+        & = \frac{1}{\sqrt{2}} \begin{bmatrix}
+            -1 \\
+            1
+        \end{bmatrix}\\
+        & =  -\frac{1}{\sqrt{2}} \begin{bmatrix}
+            1 \\
+            -1
+        \end{bmatrix}
+    \end{split}
+\end{equation*}
 \par Na první pohled nic moc překvapivého.
 Ale jedna se o první krok k porozumění důležitého konceptu: phase kick-back.
 Drive jsme si mysleli, že při použití CNOTu, ovlivňujme pouze cílový qubit.
@@ -523,8 +527,13 @@ Ale teď si úkazem, že ovlivňujme i kontrolní.
 Pro demonstraci je potřeba CNOT aplikovat na cílový qubit ve stavu superpozice.
 Nejdřív pro kontrolní qubit ve stavu $|0\rangle$, následně ve stavu $|1\rangle$:
 $$CNOT |0-\rangle = |0\rangle \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$
-$$CNOT |1-\rangle = |1\rangle \left(X \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\right) = |1\rangle \left(-1\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\right) =$$
-$$= -|1\rangle \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$
+\begin{equation*}
+    \begin{split}
+        CNOT |1-\rangle & = |1\rangle \left(X \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\right) \\
+        & = |1\rangle \left(-1\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)\right) \\
+        & = -|1\rangle \left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)
+    \end{split}
+\end{equation*}
 \par Obecně platí:
 $$CNOT |b-\rangle = (-1)^b|b\rangle\left(\frac{|0\rangle - |1\rangle}{\sqrt{2}}\right)$$:
 \par Zde je vidět, že jsme dokázali změnit fázi kontrolního qubitu, když kontrolní qubit je v superpozici:
@@ -532,14 +541,22 @@ $$CNOT\left((\alpha|0\rangle + \beta|1\rangle)\left(\frac{|0\rangle - |1\rangle}
 
 \subsection{QFT a inverzní QFT}
 \label{sec:qft}
-Informace pro tuto kapitolu jsem čerpal hlavně z učebnice \url{http://mmrc.amss.cas.cn/tlb/201702/W020170224608149125645.pdf}.
+Informace pro tuto kapitolu jsem čerpal hlavně z učebnice\footnote{\url{http://mmrc.amss.cas.cn/tlb/201702/W020170224608149125645.pdf}}.
 \par Hadamard hradlo má ještě jednu vlastnost: můžeme pomoci nej zakódovat informaci do fáze qubitu a také ji dekódovat.
 Jednoduchý příklad zakódovaní($x\in\{0,1\}$):
 $$H|x\rangle = \frac{1}{\sqrt{2}}|0\rangle + \frac{(-1)^x}{\sqrt{2}}|1\rangle = \frac{1}{\sqrt{2}}\displaystyle\sum_{y\in\{0, 1\}} (-1)^{xy}|y\rangle$$
-\par Pro dekódovaní aplikujme zase Hadamarda:
+\par Pro dekódovaní aplikujme zase Hadamardovo hradlo:
 $$H\left(\frac{1}{\sqrt{2}}|0\rangle + \frac{(-1)^x}{\sqrt{2}}|1\rangle\right) = |x\rangle$$
 \par Obecně fázi můžeme zapsat jako komplexní číslo $e^{2\pi i w}$, kde $w\in(0, 1)$ a je reálné.
-Můžeme si představit $w$ jako k-bitové binární číslo $w=0.x_1x_2x_3...x_k$, to znamená $w = x_1 \cdot 2^{-1} + x_2 \cdot 2^{-2} + x_3 \cdot 2^{-3} + ... + x_k \cdot 2^{-k}$.
+Z obrázku\footnote{\url{https://en.wikipedia.org/wiki/Euler's_formula}}, který znázorňuje geometricky smysl Eulerové rovnice,
+můžeme vidět, ze hodnota $\varphi$ v $e^{i\varphi}$ odpovídá úhlu otočeni bodu $[1, 0]$ kolem středu jednotkové kružnice v radiánech.
+V našem případě je $\varphi = 2\pi w$.
+
+\begin{figure}[H]
+    \includegraphics[scale=.25]{Eulers_formula.png}
+    \centering
+\end{figure}
+\par Můžeme si představit $w$ jako k-bitové binární číslo $w=0.x_1x_2x_3...x_k$, to znamená $w = x_1 \cdot 2^{-1} + x_2 \cdot 2^{-2} + x_3 \cdot 2^{-3} + ... + x_k \cdot 2^{-k}$.
 Pro příklad si představíme, že máme jeden qubit, pro které platí, že $w=0.x_1$.
 Pak:
 $$
@@ -549,7 +566,7 @@ $$
 $$
 \par Tento stav můžeme dekódovat pomoci hradla Hadamarda, a tím získáme $w$.
 Co když se bude $w$ skládat z $n$ bitu po desetinné čárce?
-Můžeme tento komplikovaný stav rozepsat dle rovnice 7.1.18 z učebnice.
+Můžeme tento komplikovaný stav rozepsat dle rovnice z učebnice\footnote{rovnice - 7.1.18, \url{http://mmrc.amss.cas.cn/tlb/201702/W020170224608149125645.pdf}}.
 V našem případě $w=0.x_1x_2$ a $n=2$:
 
 $$
@@ -558,7 +575,7 @@ $$
     \left(\frac{|0\rangle + e^{2\pi i (0.x_1x_2)}|1\rangle}{\sqrt{2}}\right)
 $$
 
-\par Všimneme se, že pro získaní $x_2$ stačí aplikovat Hadamrda na první qubit.
+\par Všimneme si, že pro získaní $x_2$ stačí aplikovat hradlo Hadamrda na první qubit.
 Dostat $x_1$ bude o něco složitější.
 Proto si nadefinuji hradlo $R_k$, které mění fázi qubitu:
 $$
@@ -580,11 +597,10 @@ $$
     \frac{|0\rangle + e^{2\pi i (0.x_1 1 - 0.01)}|1\rangle}{\sqrt{2}} =
     \frac{|0\rangle + e^{2\pi i (0.x_1)}|1\rangle}{\sqrt{2}}
 $$
-\par Ted už jen zbývá aplikovat Hadamarda pro získaní $x_1$.
+\par Ted už jen zbývá aplikovat $H$ pro získaní $x_1$.
 Všimneme si, že je potřeba aplikovat $R_k^{-1}$ pouze když je $x_{k + 1} = 1$.
 Takže je z toho potřeba vyrobit Controlled gate.
-Schéma pro 2 qubity by vypadala takto
-    [obrázek 7.1 z učebnice]:
+Schéma pro 2 qubity by vypadala takto\footnote{obrázek 7.1, \url{http://mmrc.amss.cas.cn/tlb/201702/W020170224608149125645.pdf}}.
 \begin{figure}[H]
     \includegraphics[scale=.6]{phase_estimation}
     \centering
@@ -605,7 +621,7 @@ QuantumEmulator – je moje vlastní Python knihovna, při jejíž implementaci 
 Nabízí funkce pro tvorbu kvantových algoritmu libovolné složitosti.
 \par Jelikož simulace kvantového počítače je hodně o počítaní s maticemi, vybral jsem si knihovnu Numpy, která zjednodušuje prací s maticemi a celkově s výpočty.
 Numpy využívá funkce psané v jazyce C, a proto jsou výpočty optimalizované a rychlé.
-\par Projekt je pod licenci MIT a lze ho najit na mem githubu zde: \url{https://github.com/DimaLeshchinskiy/QuantumEmulator}
+\par Projekt je pod licenci MIT a lze ho najit na mem githubu\footnote{\url{https://github.com/DimaLeshchinskiy/QuantumEmulator}}.
 
 \subsection{QConstants}
 Tento soubor obsahuje předem definované matice pro nejpoužívanější hradla a taky konstanty.
@@ -794,8 +810,7 @@ print("#EXAMPLE 6", state)
 \section{Shorův algoritmus}
 \subsection{Úvod}
 Profesor matematiky, P. Shor, přisel na to, jak rozložit K-bitové číslo na součin dvou prvočísel.
-K tomu je potřeba přibližně $72K^3$ qubitu.
-\url{https://journals.aps.org/pra/abstract/10.1103/PhysRevA.54.1034}
+K tomu je potřeba přibližně $72K^3$ qubitu\footnote{\url{https://journals.aps.org/pra/abstract/10.1103/PhysRevA.54.1034}}.
 Avšak jeho algoritmus vyžaduje použít kvantové výpočty. Zjistil, že pro rozloženi čísla,
 je potřeba najit periodu funkce $f(x) = a^x \bmod N$, kde $a, N, r \in \mathbb{N}$.
 Pro a platí $a < N$ a zároveň $gcd(a, N) = 1$.
@@ -816,9 +831,7 @@ $$p, q = gcd(a^\frac{r}{2} \pm 1, N)$$
 
 \subsection{Nalezeni periody funkce}
 Pro nalezeni periody se využívá Quantum Phase Estimation algoritmus.
-Jeho schéma:
-\sloppy
-\url{https://www.researchgate.net/publication/228102587_Fast_Quantum_Modular_Exponentiation_Architecture_for_Shor's_Factorization_Algorithm}
+Jeho schéma\footnote{\sloppy\url{https://www.researchgate.net/publication/228102587_Fast_Quantum_Modular_Exponentiation_Architecture_for_Shor's_Factorization_Algorithm}}:
 \begin{figure}[H]
     \includegraphics[scale=.5]{High-level-diagram-of-Shors-algorithm-Upper-register-consists-of-2n-qubits-and-holds}
     \centering
@@ -839,8 +852,7 @@ Proto zároveň při aplikaci Uf se zakóduje do fázi qubitu z kontrolního reg
 $$Uf|x\rangle|y\rangle = |x\rangle|y \cdot f(x)\rangle = |x\rangle|ya^x \bmod N \rangle$$
 \par Posledním krokem je $QFT^{-1}$.
 Jedna se o inverzní hradlo k hradlu \hyperref[sec:qft]{QFT}.
-QFT provádí dekretní Fourierovou transformaci.
-\url{https://en.wikipedia.org/wiki/Quantum_Fourier_transform}
+QFT provádí dekretní Fourierovou transformaci\footnote{\url{https://en.wikipedia.org/wiki/Quantum_Fourier_transform}}.
 $QFT^{-1}$ je potřeba pro transformaci informace z fázi kontrolních qubitu.
 Ve výsledku, když změříme kontrolní registr, dostaneme číslo $x_1$.
 Ted je potřeba pomoci continued fraction algoritmu, najit nejbližší zlomek ke zlomku $\frac{x_1}{2^{2n}}$, který nebude mít jmenovatel větší než $N$.
@@ -1000,7 +1012,8 @@ proto nebylo jednoduché pochopit části algoritmu, kde se využívá vysokošk
 \par Druhým cílem bylo zkusit rozložit číslo na součin dvou prvočísel pomoci algoritmu Shora a následně postup popsat.
 To se mi taky povedlo.
 Největší číslo, které jsem schopen rozložit je 15.
-\par Moje práce může sloužit jako výukový materiál pro studenty, které chtějí porozumět kvantovým počítačům.
+Bylo na to potřeba přibližně 12.5 GB operační paměti.
+\par Moje práce může sloužit jako výukový materiál pro studenty, kteří chtějí porozumět kvantovým počítačům.
 \newpage
 
 \section{Zdroje a odkazy}
